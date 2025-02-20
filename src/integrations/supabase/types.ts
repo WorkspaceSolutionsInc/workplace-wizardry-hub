@@ -458,6 +458,47 @@ export type Database = {
         }
         Relationships: []
       }
+      spaces: {
+        Row: {
+          company_id: number | null
+          created_at: string
+          id: number
+          location: string
+          monthly_cost: number | null
+          name: string
+          square_feet: number
+          updated_at: string
+        }
+        Insert: {
+          company_id?: number | null
+          created_at?: string
+          id?: number
+          location: string
+          monthly_cost?: number | null
+          name: string
+          square_feet?: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: number | null
+          created_at?: string
+          id?: number
+          location?: string
+          monthly_cost?: number | null
+          name?: string
+          square_feet?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spaces_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       workspace_attributes: {
         Row: {
           company_id: number | null
