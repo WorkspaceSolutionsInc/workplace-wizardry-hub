@@ -24,6 +24,7 @@ export interface WorkspaceAttribute {
   importance: number;
   company_id?: number;
   order_index: number;
+  is_primary: boolean;
 }
 
 export interface CompanyGoal {
@@ -82,7 +83,7 @@ export const PREDEFINED_GOALS = [
 export type PredefinedGoal = typeof PREDEFINED_GOALS[number];
 
 export const ATTRIBUTE_DESCRIPTIONS: Record<PredefinedAttribute, string> = {
-  "Collaboration": "Spaces that encourage team interaction and communication",
+  "Collaboration": "Spaces that encourage team interaction, huddle rooms, open layout",
   "Cost Efficiency": "Optimal use of space and resources to minimize operational costs",
   "Employee Wellness": "Features promoting physical and mental health",
   "Location Convenience": "Accessibility for employees and clients",
