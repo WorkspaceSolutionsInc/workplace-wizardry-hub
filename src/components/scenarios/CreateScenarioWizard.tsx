@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -9,6 +8,8 @@ import { ScenarioAttributeRatings } from "./wizard/ScenarioAttributeRatings";
 import { ScenarioFinancials } from "./wizard/ScenarioFinancials";
 import { X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import type { ScenarioObjective } from "./types";
 
 interface CreateScenarioFormData {
@@ -44,6 +45,7 @@ const STEPS = [
 
 export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<CreateScenarioFormData>({
     name: "",
     objective: "cost_optimization",
@@ -54,8 +56,36 @@ export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
     financials: []
   });
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const handleNext = () => {
+    if (currentStep === 1 && !formData.name) {
+      toast({
+        title: "Error",
+        description: "Please enter a scenario name",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (currentStep === 2 && formData.lobIds.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one line of business",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (currentStep === 3 && formData.spaceIds.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one space",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
@@ -69,18 +99,97 @@ export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
 
   const handleSubmit = async () => {
     try {
-      // TODO: Implement scenario creation logic
+      setIsSubmitting(true);
+
+      const { data: scenario, error: scenarioError } = await supabase
+        .from("scenarios")
+        .insert({
+          name: formData.name,
+          objective: formData.objective,
+          description: formData.description,
+          status: "draft"
+        })
+        .select()
+        .single();
+
+      if (scenarioError) throw scenarioError;
+
+      if (formData.lobIds.length > 0) {
+        const { error: lobError } = await supabase
+          .from("scenario_lobs")
+          .insert(
+            formData.lobIds.map(lobId => ({
+              scenario_id: scenario.id,
+              lob_id: lobId
+            }))
+          );
+
+        if (lobError) throw lobError;
+      }
+
+      if (formData.spaceIds.length > 0) {
+        const { error: spaceError } = await supabase
+          .from("scenario_spaces")
+          .insert(
+            formData.spaceIds.map(spaceId => ({
+              scenario_id: scenario.id,
+              space_id: spaceId
+            }))
+          );
+
+        if (spaceError) throw spaceError;
+
+        const financials = formData.financials
+          .filter(f => formData.spaceIds.includes(f.spaceId))
+          .map(f => ({
+            scenario_id: scenario.id,
+            space_id: f.spaceId,
+            monthly_cost: f.monthlyCost,
+            lease_term_months: f.leaseTermMonths,
+            start_date: f.startDate
+          }));
+
+        if (financials.length > 0) {
+          const { error: financialError } = await supabase
+            .from("scenario_financials")
+            .insert(financials);
+
+          if (financialError) throw financialError;
+        }
+      }
+
+      if (formData.attributeRatings.length > 0) {
+        const { error: ratingError } = await supabase
+          .from("scenario_attribute_ratings")
+          .insert(
+            formData.attributeRatings.map(rating => ({
+              scenario_id: scenario.id,
+              attribute_id: rating.attributeId,
+              lob_id: rating.lobId,
+              rating: rating.rating
+            }))
+          );
+
+        if (ratingError) throw ratingError;
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["scenarios"] });
+      
       toast({
         title: "Success",
         description: "Scenario created successfully"
       });
+      
       onClose();
     } catch (error) {
+      console.error("Error creating scenario:", error);
       toast({
         title: "Error",
-        description: "Failed to create scenario",
+        description: "Failed to create scenario. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -138,6 +247,7 @@ export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
             size="icon"
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700"
+            disabled={isSubmitting}
           >
             <X className="h-5 w-5" />
           </Button>
@@ -186,7 +296,7 @@ export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
           <Button
             variant="outline"
             onClick={handleBack}
-            disabled={currentStep === 1}
+            disabled={currentStep === 1 || isSubmitting}
           >
             Back
           </Button>
@@ -194,13 +304,15 @@ export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
             <Button
               className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45]"
               onClick={handleSubmit}
+              disabled={isSubmitting}
             >
-              Create Scenario
+              {isSubmitting ? "Creating..." : "Create Scenario"}
             </Button>
           ) : (
             <Button
               className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45]"
               onClick={handleNext}
+              disabled={isSubmitting}
             >
               Next
             </Button>
