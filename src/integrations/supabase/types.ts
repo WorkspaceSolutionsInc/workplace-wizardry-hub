@@ -181,6 +181,44 @@ export type Database = {
         }
         Relationships: []
       }
+      lines_of_business: {
+        Row: {
+          company_id: number | null
+          created_at: string
+          headcount: number | null
+          id: number
+          name: string
+          type: Database["public"]["Enums"]["lob_type"]
+          updated_at: string
+        }
+        Insert: {
+          company_id?: number | null
+          created_at?: string
+          headcount?: number | null
+          id?: number
+          name: string
+          type: Database["public"]["Enums"]["lob_type"]
+          updated_at?: string
+        }
+        Update: {
+          company_id?: number | null
+          created_at?: string
+          headcount?: number | null
+          id?: number
+          name?: string
+          type?: Database["public"]["Enums"]["lob_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lines_of_business_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       module_statuses: {
         Row: {
           created_at: string
@@ -524,6 +562,17 @@ export type Database = {
         | "Education"
         | "Government"
         | "Other"
+      lob_type:
+        | "Research"
+        | "Marketing"
+        | "Sales"
+        | "Operations"
+        | "Engineering"
+        | "Finance"
+        | "Human Resources"
+        | "Legal"
+        | "IT"
+        | "Customer Service"
       scenario_objective:
         | "cost_optimization"
         | "workforce_retention"
