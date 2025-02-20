@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Edit2 } from "lucide-react";
@@ -25,13 +26,22 @@ interface RawCompanyGoal {
   is_primary?: boolean;
 }
 
+interface RawWorkspaceAttribute {
+  id: number;
+  name: string;
+  company_id: number;
+  created_at: string;
+  updated_at: string;
+  importance: number;
+  order_index: number;
+  is_primary?: boolean;
+}
+
 const Company = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<CompanyProfile | null>(null);
-  const [newAttribute, setNewAttribute] = useState("");
-  const [newGoal, setNewGoal] = useState("");
   const [isAdmin] = useState(true);
 
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
@@ -56,7 +66,12 @@ const Company = () => {
         .order("order_index");
       
       if (error) throw error;
-      return data as WorkspaceAttribute[];
+      
+      // Transform the raw data to include is_primary with a default value
+      return (data as RawWorkspaceAttribute[]).map(attr => ({
+        ...attr,
+        is_primary: attr.is_primary ?? false
+      })) as WorkspaceAttribute[];
     },
   });
 
@@ -139,6 +154,7 @@ const Company = () => {
             importance: industryWeighting?.default_weight || 0,
             company_id: profile?.id,
             order_index: attributes.length,
+            is_primary: false // Set default value
           },
         ])
         .select()
@@ -149,7 +165,6 @@ const Company = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workspaceAttributes"] });
-      setNewAttribute("");
       toast({
         title: "Success",
         description: "Workspace attribute added successfully",
@@ -203,115 +218,6 @@ const Company = () => {
     },
   });
 
-  const addGoal = useMutation({
-    mutationFn: async (isPrimary: boolean) => {
-      if (!newGoal) return;
-
-      const { data, error } = await supabase
-        .from("company_goals")
-        .insert([
-          {
-            name: newGoal,
-            company_id: profile?.id,
-            importance: 0,
-            is_primary: isPrimary
-          },
-        ])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyGoals"] });
-      setNewGoal("");
-      toast({
-        title: "Success",
-        description: "Company goal added successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to add company goal",
-        variant: "destructive",
-      });
-      console.error("Error adding goal:", error);
-    },
-  });
-
-  const deleteGoal = useMutation({
-    mutationFn: async (id: number) => {
-      const { error } = await supabase
-        .from("company_goals")
-        .delete()
-        .eq("id", id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyGoals"] });
-      toast({
-        title: "Success",
-        description: "Company goal deleted successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to delete company goal",
-        variant: "destructive",
-      });
-      console.error("Error deleting goal:", error);
-    },
-  });
-
-  const updateGoalImportance = useMutation({
-    mutationFn: async ({ id, importance }: { id: number; importance: number }) => {
-      const { error } = await supabase
-        .from("company_goals")
-        .update({ importance })
-        .eq("id", id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyGoals"] });
-    },
-  });
-
-  const toggleGoalPrimary = useMutation({
-    mutationFn: async (id: number) => {
-      const goal = goals.find(g => g.id === id);
-      if (!goal) return;
-
-      const newIsPrimary = !goal.is_primary;
-      const primaryGoalsCount = goals.filter(g => g.is_primary).length;
-      
-      if (newIsPrimary && primaryGoalsCount >= 3) {
-        throw new Error("Maximum of 3 primary goals allowed");
-      }
-
-      const { error } = await supabase
-        .from("company_goals")
-        .update({ is_primary: newIsPrimary })
-        .eq("id", id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyGoals"] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update goal priority",
-        variant: "destructive",
-      });
-    },
-  });
-
   const updateAttributeImportance = useMutation({
     mutationFn: async ({ id, importance }: { id: number; importance: number }) => {
       const { error } = await supabase
@@ -323,6 +229,37 @@ const Company = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["workspaceAttributes"] });
+    },
+  });
+
+  const toggleAttributePrimary = useMutation({
+    mutationFn: async (id: number) => {
+      const attribute = attributes.find(a => a.id === id);
+      if (!attribute) return;
+
+      const newIsPrimary = !attribute.is_primary;
+      const primaryCount = attributes.filter(a => a.is_primary).length;
+
+      if (newIsPrimary && primaryCount >= 3) {
+        throw new Error("Maximum of 3 primary attributes allowed");
+      }
+
+      const { error } = await supabase
+        .from("workspace_attributes")
+        .update({ is_primary: newIsPrimary })
+        .eq("id", id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["workspaceAttributes"] });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to update attribute priority",
+        variant: "destructive",
+      });
     },
   });
 
@@ -406,30 +343,25 @@ const Company = () => {
         <CompanyGoals
           goals={goals}
           isAdmin={isAdmin}
-          newGoal={newGoal}
-          onNewGoalChange={setNewGoal}
-          onAddGoal={(isPrimary) => addGoal.mutate(isPrimary)}
-          onDeleteGoal={(id) => deleteGoal.mutate(id)}
-          onImportanceChange={(id, importance) =>
-            updateGoalImportance.mutate({ id, importance })
-          }
-          onTogglePrimary={(id) => toggleGoalPrimary.mutate(id)}
         />
 
         <WorkspaceAttributes
           attributes={attributes}
           isAdmin={isAdmin}
-          newAttribute={newAttribute}
-          onNewAttributeChange={setNewAttribute}
-          onAddAttribute={() => {
-            if (newAttribute.trim()) {
-              addAttribute.mutate(newAttribute.trim());
-            }
-          }}
+          onAddAttribute={(name, isPrimary) => 
+            addAttribute.mutate(name, {
+              onSuccess: () => {
+                if (isPrimary) {
+                  toggleAttributePrimary.mutate(attributes[attributes.length - 1].id);
+                }
+              }
+            })
+          }
           onDeleteAttribute={(id) => deleteAttribute.mutate(id)}
           onImportanceChange={(id, importance) =>
             updateAttributeImportance.mutate({ id, importance })
           }
+          onTogglePrimary={(id) => toggleAttributePrimary.mutate(id)}
         />
       </div>
     </TooltipProvider>
