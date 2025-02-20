@@ -1,55 +1,18 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, GripVertical, Plus, AlertCircle, HelpCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { CompanyInformation } from "@/components/company/CompanyInformation";
+import { WorkspaceAttributes } from "@/components/company/WorkspaceAttributes";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
-type Industry = 
-  | "Technology"
-  | "Finance"
-  | "Healthcare"
-  | "Retail"
-  | "Manufacturing"
-  | "Professional Services"
-  | "Education"
-  | "Government"
-  | "Other";
-
-interface CompanyProfile {
-  id: number;
-  name: string;
-  industry: Industry;
-  company_size: number;
-  number_of_sites: number;
-}
-
-interface WorkspaceAttribute {
-  id: number;
-  name: string;
-  importance: number;
-  order_index: number;
-}
-
-interface CompanyGoal {
-  id: number;
-  name: string;
-  company_id: number;
-}
-
-interface IndustryWeighting {
-  id: number;
-  attribute_name: string;
-  default_weight: number;
-}
+  CompanyProfile,
+  WorkspaceAttribute,
+  CompanyGoal,
+  IndustryWeighting,
+} from "@/components/company/types";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const Company = () => {
   const { toast } = useToast();
@@ -270,24 +233,6 @@ const Company = () => {
     },
   });
 
-  const InfoTooltip = ({ content }: { content: string }) => (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          variant="ghost"
-          className="p-0 h-auto hover:bg-transparent text-[#474a4f]/60 hover:text-[#474a4f]"
-        >
-          <HelpCircle className="h-4 w-4" />
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent 
-        className="max-w-[300px] text-sm bg-white text-[#474a4f] border border-[#474a4f]/10 p-3 shadow-lg"
-      >
-        {content}
-      </TooltipContent>
-    </Tooltip>
-  );
-
   if (isLoadingProfile || isLoadingAttributes || isLoadingGoals) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -325,421 +270,64 @@ const Company = () => {
   }
 
   return (
-    <div className="animate-fadeIn space-y-8">
-      <div className="bg-[#fccc55] p-6 rounded-lg shadow-sm">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-[2em] font-bold text-[#474a4f] tracking-tight">
-              Company Profile
-            </h1>
-            <p className="text-[#474a4f]/80 mt-1 text-base">
-              Manage your global settings and workspace criteria
-            </p>
-          </div>
-          {isAdmin && !isEditing && (
-            <Button
-              onClick={() => {
-                setIsEditing(true);
-                setEditedProfile(profile);
-              }}
-              className="bg-[#474a4f] text-white hover:bg-[#3e4449] font-semibold flex items-center gap-2"
-            >
-              <Edit2 className="h-4 w-4" />
-              Edit Profile
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <Card className="border border-[#474a4f]/10 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="border-b border-[#474a4f]/10">
-          <CardTitle className="text-[1.5em] font-semibold text-[#474a4f]">
-            Company Information
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-6 space-y-6">
-          {isAdmin && isEditing ? (
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (editedProfile) {
-                  updateProfile.mutate(editedProfile);
-                }
-              }}
-              className="space-y-4"
-            >
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#474a4f]">Company Name</label>
-                <Input
-                  value={editedProfile?.name ?? ""}
-                  onChange={(e) =>
-                    setEditedProfile((prev) =>
-                      prev ? { ...prev, name: e.target.value } : null
-                    )
-                  }
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#474a4f]">Industry</label>
-                <select
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
-                  value={editedProfile?.industry ?? ""}
-                  onChange={(e) => {
-                    setEditedProfile((prev) =>
-                      prev ? { ...prev, industry: e.target.value as Industry } : null
-                    );
-                  }}
-                  required
-                >
-                  <option value="">Select an industry</option>
-                  {[
-                    "Technology",
-                    "Finance",
-                    "Healthcare",
-                    "Retail",
-                    "Manufacturing",
-                    "Professional Services",
-                    "Education",
-                    "Government",
-                    "Other",
-                  ].map((industry) => (
-                    <option key={industry} value={industry}>
-                      {industry}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#474a4f]">Company Size</label>
-                <Input
-                  type="number"
-                  value={editedProfile?.company_size ?? ""}
-                  onChange={(e) =>
-                    setEditedProfile((prev) =>
-                      prev
-                        ? { ...prev, company_size: parseInt(e.target.value) }
-                        : null
-                    )
-                  }
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-[#474a4f]">Number of Sites</label>
-                <Input
-                  type="number"
-                  value={editedProfile?.number_of_sites ?? ""}
-                  onChange={(e) =>
-                    setEditedProfile((prev) =>
-                      prev
-                        ? { ...prev, number_of_sites: parseInt(e.target.value) }
-                        : null
-                    )
-                  }
-                  required
-                />
-              </div>
-
-              <div className="flex gap-3">
-                <Button 
-                  type="submit"
-                  className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold"
-                >
-                  Save Changes
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditedProfile(null);
-                  }}
-                  className="border-[#474a4f]/20 text-[#474a4f] hover:bg-[#474a4f]/5"
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-sm font-medium text-[#9e9e9e] mb-1">
-                  Company Name
-                </p>
-                <p className="text-lg text-[#474a4f]">{profile?.name}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-[#9e9e9e] mb-1">
-                  Industry
-                </p>
-                <p className="text-lg text-[#474a4f]">{profile?.industry}</p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-[#9e9e9e] mb-1">
-                  Company Size
-                </p>
-                <p className="text-lg text-[#474a4f]">
-                  {profile?.company_size.toLocaleString()} employees
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-[#9e9e9e] mb-1">
-                  Number of Sites
-                </p>
-                <p className="text-lg text-[#474a4f]">
-                  {profile?.number_of_sites.toLocaleString()} locations
-                </p>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="border border-[#474a4f]/10 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="border-b border-[#474a4f]/10">
+    <TooltipProvider>
+      <div className="animate-fadeIn space-y-8">
+        <div className="bg-[#fccc55] p-6 rounded-lg shadow-sm">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-[1.5em] font-semibold text-[#474a4f]">
-              Company Goals
-            </CardTitle>
-            {isAdmin && goals.length < 10 && (
-              <div className="flex items-center gap-3">
-                <Input
-                  placeholder="Add a new company goal"
-                  value={newGoal}
-                  onChange={(e) => setNewGoal(e.target.value)}
-                  className="w-[300px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
-                />
-                <Button
-                  onClick={() => {
-                    if (newGoal.trim()) {
-                      addGoal.mutate(newGoal.trim());
-                    }
-                  }}
-                  className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Goal
-                </Button>
-              </div>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-3">
-            {goals.length === 0 ? (
-              <p className="text-[#9e9e9e] text-center py-4">
-                No company goals defined yet
+            <div>
+              <h1 className="text-[2em] font-bold text-[#474a4f] tracking-tight">
+                Company Profile
+              </h1>
+              <p className="text-[#474a4f]/80 mt-1 text-base">
+                Manage your global settings and workspace criteria
               </p>
-            ) : (
-              goals.map((goal) => (
-                <div
-                  key={goal.id}
-                  className="flex items-center justify-between p-4 bg-[#f8f8f8] rounded-lg group hover:bg-[#f3f3f3] transition-colors"
-                >
-                  <span className="text-[#474a4f] font-medium">{goal.name}</span>
-                  {isAdmin && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        if (window.confirm("Are you sure you want to remove this goal?")) {
-                          // TODO: Implement delete goal
-                        }
-                      }}
-                      className="opacity-0 group-hover:opacity-100 text-[#ef5823] hover:text-[#ef5823] hover:bg-[#ef5823]/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))
+            </div>
+            {isAdmin && !isEditing && (
+              <Button
+                onClick={() => {
+                  setIsEditing(true);
+                  setEditedProfile(profile);
+                }}
+                className="bg-[#474a4f] text-white hover:bg-[#3e4449] font-semibold flex items-center gap-2"
+              >
+                <Edit2 className="h-4 w-4" />
+                Edit Profile
+              </Button>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card className="border border-[#474a4f]/10 shadow-sm hover:shadow-md transition-shadow duration-200">
-        <CardHeader className="border-b border-[#474a4f]/10">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-[1.5em] font-semibold text-[#474a4f]">
-                Workspace Attributes (Company-Wide)
-              </CardTitle>
-              <InfoTooltip 
-                content="Workspace Attributes let you define which aspects—like Collaboration, Wellness, Brand Image—are most important to your organization as a whole. Each line of business can later choose or refine these attributes."
-              />
-            </div>
-            <p className="text-[#474a4f]/80 text-base">
-              These are the master set of workplace attributes that define what your organization values in any office space. You can pick up to 6 total: 3 "main" (primary) and 3 "secondary" (secondary). All Lines of Business will reference this set, though each LOB can further refine which ones they adopt and how they weight them.
-            </p>
-          </div>
-        </CardHeader>
-        <CardContent className="pt-6">
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <h3 className="font-medium text-[#474a4f]">Available Attributes</h3>
-                <InfoTooltip 
-                  content="From this list of 20 potential attributes, select 3 primary (top-priority) and 3 secondary. You may provide default weighting if desired. LOBs can then refine or skip attributes not relevant to them."
-                />
-              </div>
-              {isAdmin && attributes.length < 6 && (
-                <div className="flex items-center gap-3">
-                  <Input
-                    placeholder="Add a new workspace attribute"
-                    value={newAttribute}
-                    onChange={(e) => setNewAttribute(e.target.value)}
-                    className="w-[300px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
-                  />
-                  <Button
-                    onClick={() => {
-                      if (newAttribute.trim()) {
-                        addAttribute.mutate(newAttribute.trim());
-                      }
-                    }}
-                    className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Attribute
-                  </Button>
-                </div>
-              )}
-            </div>
+        <CompanyInformation
+          profile={profile}
+          isAdmin={isAdmin}
+          isEditing={isEditing}
+          editedProfile={editedProfile}
+          setEditedProfile={setEditedProfile}
+          onSave={(updatedProfile) => updateProfile.mutate(updatedProfile)}
+          onCancel={() => {
+            setIsEditing(false);
+            setEditedProfile(null);
+          }}
+        />
 
-            {attributes.length === 0 ? (
-              <div className="text-center py-8 bg-[#f8f8f8] rounded-lg">
-                <p className="text-[#9e9e9e]">
-                  No workspace attributes defined yet
-                </p>
-                <p className="text-[#474a4f]/60 text-sm mt-1">
-                  Add up to 6 attributes that define what your organization values
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-[#474a4f]">Primary Attributes</h4>
-                      <InfoTooltip 
-                        content="These are your top 3 most important workspace attributes. They should reflect your organization's highest priorities."
-                      />
-                    </div>
-                    {attributes
-                      .filter((_, index) => index < 3)
-                      .map((attribute) => (
-                        <AttributeRow
-                          key={attribute.id}
-                          attribute={attribute}
-                          isAdmin={isAdmin}
-                          onDelete={() => deleteAttribute.mutate(attribute.id)}
-                          onImportanceChange={(importance) =>
-                            updateImportance.mutate({
-                              id: attribute.id,
-                              importance,
-                            })
-                          }
-                        />
-                      ))}
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <h4 className="font-medium text-[#474a4f]">Secondary Attributes</h4>
-                      <InfoTooltip 
-                        content="These supporting attributes complement your primary ones and provide additional context for workspace evaluation."
-                      />
-                    </div>
-                    {attributes
-                      .filter((_, index) => index >= 3)
-                      .map((attribute) => (
-                        <AttributeRow
-                          key={attribute.id}
-                          attribute={attribute}
-                          isAdmin={isAdmin}
-                          onDelete={() => deleteAttribute.mutate(attribute.id)}
-                          onImportanceChange={(importance) =>
-                            updateImportance.mutate({
-                              id: attribute.id,
-                              importance,
-                            })
-                          }
-                        />
-                      ))}
-                  </div>
-                </div>
-
-                {attributes.length >= 6 && (
-                  <div className="flex items-center gap-2 text-sm text-[#ef5823] bg-[#ef5823]/5 p-3 rounded-lg mt-4">
-                    <AlertCircle className="h-4 w-4" />
-                    Maximum number of attributes (6) reached
-                  </div>
-                )}
-
-                {isAdmin && (
-                  <div className="mt-4 p-3 bg-[#f8f8f8] rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <AlertCircle className="h-4 w-4 text-[#474a4f]/60" />
-                      <p className="text-sm text-[#474a4f]/80">
-                        Changing these attributes may affect existing Lines of Business and Scenarios
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        <WorkspaceAttributes
+          attributes={attributes}
+          isAdmin={isAdmin}
+          newAttribute={newAttribute}
+          onNewAttributeChange={setNewAttribute}
+          onAddAttribute={() => {
+            if (newAttribute.trim()) {
+              addAttribute.mutate(newAttribute.trim());
+            }
+          }}
+          onDeleteAttribute={(id) => deleteAttribute.mutate(id)}
+          onImportanceChange={(id, importance) =>
+            updateImportance.mutate({ id, importance })
+          }
+        />
+      </div>
+    </TooltipProvider>
   );
 };
-
-const AttributeRow = ({
-  attribute,
-  isAdmin,
-  onDelete,
-  onImportanceChange,
-}: {
-  attribute: WorkspaceAttribute;
-  isAdmin: boolean;
-  onDelete: () => void;
-  onImportanceChange: (importance: number) => void;
-}) => (
-  <div className="flex items-center justify-between p-4 bg-[#f8f8f8] rounded-lg group hover:bg-[#f3f3f3] transition-colors">
-    <div className="flex items-center gap-3">
-      {isAdmin && (
-        <GripVertical className="h-5 w-5 text-[#9e9e9e] cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
-      )}
-      <span className="text-[#474a4f] font-medium">{attribute.name}</span>
-    </div>
-    <div className="flex items-center gap-4">
-      <div className="flex items-center gap-2">
-        <Input
-          type="number"
-          min="0"
-          max="100"
-          value={attribute.importance}
-          onChange={(e) => onImportanceChange(parseInt(e.target.value))}
-          className="w-[80px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
-          disabled={!isAdmin}
-        />
-        <span className="text-sm text-[#9e9e9e]">%</span>
-      </div>
-      {isAdmin && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onDelete}
-          className="opacity-0 group-hover:opacity-100 text-[#ef5823] hover:text-[#ef5823] hover:bg-[#ef5823]/10"
-        >
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      )}
-    </div>
-  </div>
-);
 
 export default Company;

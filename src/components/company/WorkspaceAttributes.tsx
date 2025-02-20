@@ -1,0 +1,151 @@
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Plus, AlertCircle } from "lucide-react";
+import { InfoTooltip } from "./InfoTooltip";
+import { AttributeRow } from "./AttributeRow";
+import { WorkspaceAttribute } from "./types";
+
+interface WorkspaceAttributesProps {
+  attributes: WorkspaceAttribute[];
+  isAdmin: boolean;
+  newAttribute: string;
+  onNewAttributeChange: (value: string) => void;
+  onAddAttribute: () => void;
+  onDeleteAttribute: (id: number) => void;
+  onImportanceChange: (id: number, importance: number) => void;
+}
+
+export const WorkspaceAttributes = ({
+  attributes,
+  isAdmin,
+  newAttribute,
+  onNewAttributeChange,
+  onAddAttribute,
+  onDeleteAttribute,
+  onImportanceChange,
+}: WorkspaceAttributesProps) => (
+  <Card className="border border-[#474a4f]/10 shadow-sm hover:shadow-md transition-shadow duration-200">
+    <CardHeader className="border-b border-[#474a4f]/10">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <CardTitle className="text-[1.5em] font-semibold text-[#474a4f]">
+            Workspace Attributes (Company-Wide)
+          </CardTitle>
+          <InfoTooltip 
+            content="Workspace Attributes let you define which aspects—like Collaboration, Wellness, Brand Image—are most important to your organization as a whole. Each line of business can later choose or refine these attributes."
+          />
+        </div>
+        <p className="text-[#474a4f]/80 text-base">
+          These are the master set of workplace attributes that define what your organization values in any office space. You can pick up to 6 total: 3 "main" (primary) and 3 "secondary" (secondary). All Lines of Business will reference this set, though each LOB can further refine which ones they adopt and how they weight them.
+        </p>
+      </div>
+    </CardHeader>
+    <CardContent className="pt-6">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h3 className="font-medium text-[#474a4f]">Available Attributes</h3>
+            <InfoTooltip 
+              content="From this list of 20 potential attributes, select 3 primary (top-priority) and 3 secondary. You may provide default weighting if desired. LOBs can then refine or skip attributes not relevant to them."
+            />
+          </div>
+          {isAdmin && attributes.length < 6 && (
+            <div className="flex items-center gap-3">
+              <Input
+                placeholder="Add a new workspace attribute"
+                value={newAttribute}
+                onChange={(e) => onNewAttributeChange(e.target.value)}
+                className="w-[300px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
+              />
+              <Button
+                onClick={onAddAttribute}
+                className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Attribute
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {attributes.length === 0 ? (
+          <div className="text-center py-8 bg-[#f8f8f8] rounded-lg">
+            <p className="text-[#9e9e9e]">
+              No workspace attributes defined yet
+            </p>
+            <p className="text-[#474a4f]/60 text-sm mt-1">
+              Add up to 6 attributes that define what your organization values
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-medium text-[#474a4f]">Primary Attributes</h4>
+                  <InfoTooltip 
+                    content="These are your top 3 most important workspace attributes. They should reflect your organization's highest priorities."
+                  />
+                </div>
+                {attributes
+                  .filter((_, index) => index < 3)
+                  .map((attribute) => (
+                    <AttributeRow
+                      key={attribute.id}
+                      attribute={attribute}
+                      isAdmin={isAdmin}
+                      onDelete={() => onDeleteAttribute(attribute.id)}
+                      onImportanceChange={(importance) =>
+                        onImportanceChange(attribute.id, importance)
+                      }
+                    />
+                  ))}
+              </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <h4 className="font-medium text-[#474a4f]">Secondary Attributes</h4>
+                  <InfoTooltip 
+                    content="These supporting attributes complement your primary ones and provide additional context for workspace evaluation."
+                  />
+                </div>
+                {attributes
+                  .filter((_, index) => index >= 3)
+                  .map((attribute) => (
+                    <AttributeRow
+                      key={attribute.id}
+                      attribute={attribute}
+                      isAdmin={isAdmin}
+                      onDelete={() => onDeleteAttribute(attribute.id)}
+                      onImportanceChange={(importance) =>
+                        onImportanceChange(attribute.id, importance)
+                      }
+                    />
+                  ))}
+              </div>
+            </div>
+
+            {attributes.length >= 6 && (
+              <div className="flex items-center gap-2 text-sm text-[#ef5823] bg-[#ef5823]/5 p-3 rounded-lg mt-4">
+                <AlertCircle className="h-4 w-4" />
+                Maximum number of attributes (6) reached
+              </div>
+            )}
+
+            {isAdmin && (
+              <div className="mt-4 p-3 bg-[#f8f8f8] rounded-lg">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-[#474a4f]/60" />
+                  <p className="text-sm text-[#474a4f]/80">
+                    Changing these attributes may affect existing Lines of Business and Scenarios
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </CardContent>
+  </Card>
+);
