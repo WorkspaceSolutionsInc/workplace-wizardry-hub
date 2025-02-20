@@ -36,3 +36,28 @@ export interface IndustryWeighting {
   attribute_name: string;
   default_weight: number;
 }
+
+export const PREDEFINED_ATTRIBUTES = [
+  "Collaboration",
+  "Cost Efficiency",
+  "Employee Wellness",
+  "Location Convenience",
+  "Brand Image / Aesthetics",
+  "Quiet Spaces / Focus Areas",
+  "Technology Infrastructure",
+  "Flexibility / Agile Spaces",
+  "Sustainability / Green Initiatives",
+  "Security / Access Control",
+  "Amenities (Cafeteria, Gym)",
+  "Parking / Transportation",
+  "Team Adjacencies",
+  "Openness / Layout Flow",
+  "Daylight / Natural Lighting",
+  "Safety (Fire, Earthquake readiness)",
+  "Workspace Density",
+  "Privacy / Soundproofing",
+  "Executive / Client Impressiveness",
+  "Furniture Ergonomics"
+] as const;
+
+export type PredefinedAttribute = typeof PREDEFINED_ATTRIBUTES[number];
