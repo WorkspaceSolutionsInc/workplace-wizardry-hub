@@ -31,9 +31,9 @@ export function DashboardSidebar() {
   const navigate = useNavigate();
 
   return (
-    <SidebarContent className="pt-4">
+    <SidebarContent>
       <SidebarGroup>
-        <SidebarGroupLabel className="px-6 text-xs font-medium text-secondary/60">
+        <SidebarGroupLabel className="px-6 text-xs font-medium text-[#474a4f]/60 mt-4">
           Navigation
         </SidebarGroupLabel>
         <SidebarGroupContent>
@@ -42,11 +42,11 @@ export function DashboardSidebar() {
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton 
                   onClick={() => navigate(item.path)}
-                  className="px-6 py-2.5 w-full flex items-center gap-3 text-secondary/80 hover:text-primary hover:bg-primary/5 rounded-none transition-colors relative group"
+                  className="px-6 py-3 w-full flex items-center gap-3 text-[#474a4f]/80 hover:text-[#474a4f] hover:bg-[#fccc55]/5 rounded-none transition-colors relative group"
                 >
                   <item.icon className="w-5 h-5" />
                   <span className="font-medium">{item.title}</span>
-                  <div className="absolute left-0 top-0 h-full w-1 bg-primary scale-y-0 group-hover:scale-y-100 transition-transform" />
+                  <div className="absolute left-0 top-0 h-full w-1 bg-[#fccc55] scale-y-0 group-hover:scale-y-100 transition-transform" />
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
