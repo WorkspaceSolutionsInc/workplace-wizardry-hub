@@ -1,41 +1,24 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { X } from "lucide-react";
+import { useToast } from "@/components/ui/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { ScenarioBasicInfo } from "./wizard/ScenarioBasicInfo";
 import { ScenarioLOBSelection } from "./wizard/ScenarioLOBSelection";
 import { ScenarioSpaceSelection } from "./wizard/ScenarioSpaceSelection";
 import { ScenarioAttributeRatings } from "./wizard/ScenarioAttributeRatings";
 import { ScenarioFinancials } from "./wizard/ScenarioFinancials";
-import { X } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { ScenarioObjective } from "./types";
-
-interface CreateScenarioFormData {
-  name: string;
-  objective: ScenarioObjective;
-  description?: string;
-  lobIds: number[];
-  spaceIds: number[];
-  attributeRatings: Array<{
-    attributeId: number;
-    lobId: number;
-    rating: number;
-  }>;
-  financials: Array<{
-    spaceId: number;
-    monthlyCost?: number;
-    leaseTermMonths?: number;
-    startDate?: string;
-  }>;
-}
+import { WizardSteps } from "./wizard/WizardSteps";
+import type { CreateScenarioFormData, WizardStep } from "./wizard/types";
 
 interface CreateScenarioWizardProps {
   onClose: () => void;
 }
 
-const STEPS = [
+const STEPS: WizardStep[] = [
   { id: 1, title: "Basic Info" },
   { id: 2, title: "Lines of Business" },
   { id: 3, title: "Spaces" },
@@ -55,37 +38,48 @@ export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
     attributeRatings: [],
     financials: []
   });
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const validateStep = () => {
+    switch (currentStep) {
+      case 1:
+        if (!formData.name) {
+          toast({
+            title: "Error",
+            description: "Please enter a scenario name",
+            variant: "destructive"
+          });
+          return false;
+        }
+        break;
+      case 2:
+        if (formData.lobIds.length === 0) {
+          toast({
+            title: "Error",
+            description: "Please select at least one line of business",
+            variant: "destructive"
+          });
+          return false;
+        }
+        break;
+      case 3:
+        if (formData.spaceIds.length === 0) {
+          toast({
+            title: "Error",
+            description: "Please select at least one space",
+            variant: "destructive"
+          });
+          return false;
+        }
+        break;
+    }
+    return true;
+  };
+
   const handleNext = () => {
-    if (currentStep === 1 && !formData.name) {
-      toast({
-        title: "Error",
-        description: "Please enter a scenario name",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (currentStep === 2 && formData.lobIds.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one line of business",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (currentStep === 3 && formData.spaceIds.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one space",
-        variant: "destructive"
-      });
-      return;
-    }
-
+    if (!validateStep()) return;
     if (currentStep < STEPS.length) {
       setCurrentStep(currentStep + 1);
     }
@@ -114,6 +108,7 @@ export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
 
       if (scenarioError) throw scenarioError;
 
+      // Insert LOBs
       if (formData.lobIds.length > 0) {
         const { error: lobError } = await supabase
           .from("scenario_lobs")
@@ -127,6 +122,7 @@ export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
         if (lobError) throw lobError;
       }
 
+      // Insert Spaces and Financials
       if (formData.spaceIds.length > 0) {
         const { error: spaceError } = await supabase
           .from("scenario_spaces")
@@ -158,6 +154,7 @@ export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
         }
       }
 
+      // Insert Attribute Ratings
       if (formData.attributeRatings.length > 0) {
         const { error: ratingError } = await supabase
           .from("scenario_attribute_ratings")
@@ -253,42 +250,7 @@ export function CreateScenarioWizard({ onClose }: CreateScenarioWizardProps) {
           </Button>
         </div>
 
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            {STEPS.map((step) => (
-              <div
-                key={step.id}
-                className={`flex items-center ${
-                  step.id !== STEPS.length ? "flex-1" : ""
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    step.id <= currentStep
-                      ? "bg-[#fccc55] text-[#474a4f]"
-                      : "bg-gray-200 text-gray-500"
-                  }`}
-                >
-                  {step.id}
-                </div>
-                {step.id !== STEPS.length && (
-                  <div
-                    className={`h-1 flex-1 mx-2 ${
-                      step.id < currentStep ? "bg-[#fccc55]" : "bg-gray-200"
-                    }`}
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="flex justify-between text-sm text-gray-500">
-            {STEPS.map((step) => (
-              <div key={step.id} className="text-center">
-                {step.title}
-              </div>
-            ))}
-          </div>
-        </div>
+        <WizardSteps steps={STEPS} currentStep={currentStep} />
 
         <div className="mb-8">{renderStep()}</div>
 
