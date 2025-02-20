@@ -91,6 +91,8 @@ export type Database = {
           company_id: number | null
           created_at: string
           id: number
+          importance: number | null
+          is_primary: boolean | null
           name: string
           updated_at: string
         }
@@ -98,6 +100,8 @@ export type Database = {
           company_id?: number | null
           created_at?: string
           id?: number
+          importance?: number | null
+          is_primary?: boolean | null
           name: string
           updated_at?: string
         }
@@ -105,6 +109,8 @@ export type Database = {
           company_id?: number | null
           created_at?: string
           id?: number
+          importance?: number | null
+          is_primary?: boolean | null
           name?: string
           updated_at?: string
         }
