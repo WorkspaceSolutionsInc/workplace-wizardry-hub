@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { GripVertical, Trash2, ArrowUpDown } from "lucide-react";
-import { CompanyGoal } from "./types";
+import { CompanyGoal, GOAL_DESCRIPTIONS } from "./types";
 import { InfoTooltip } from "./InfoTooltip";
 
 interface GoalRowProps {
@@ -20,22 +20,6 @@ export const GoalRow = ({
   onImportanceChange,
   onTogglePrimary,
 }: GoalRowProps) => {
-  const getGoalDescription = (goal: string): string => {
-    const descriptions: Record<string, string> = {
-      "Cost Optimization": "Strategies to reduce operational expenses and improve financial efficiency",
-      "Workforce Retention": "Initiatives to maintain and develop valuable employees",
-      "Brand Enhancement": "Efforts to strengthen market position and company image",
-      "Innovation & Creativity": "Fostering new ideas and creative problem-solving",
-      "Environmental Sustainability": "Reducing environmental impact and promoting green practices",
-      "Employee Well-being": "Programs to improve employee health and satisfaction",
-      "Operational Efficiency": "Streamlining processes and improving productivity",
-      "Market Expansion": "Growing into new markets or customer segments",
-      "Talent Attraction": "Recruiting top talent and maintaining competitive advantage",
-      "Digital Transformation": "Adopting and leveraging new technologies"
-    };
-    return descriptions[goal] || goal;
-  };
-
   return (
     <div className="flex items-center justify-between p-4 bg-[#f8f8f8] rounded-lg group hover:bg-[#f3f3f3] transition-colors">
       <div className="flex items-center gap-3">
@@ -44,7 +28,7 @@ export const GoalRow = ({
         )}
         <div className="flex items-center gap-2">
           <span className="text-[#474a4f] font-medium">{goal.name}</span>
-          <InfoTooltip content={getGoalDescription(goal.name)} />
+          <InfoTooltip content={GOAL_DESCRIPTIONS[goal.name]} />
         </div>
       </div>
       <div className="flex items-center gap-4">
