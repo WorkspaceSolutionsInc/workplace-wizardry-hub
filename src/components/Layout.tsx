@@ -7,11 +7,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-secondary/5">
         <Sidebar className="border-r border-secondary/10 bg-white">
-          <SidebarHeader className="flex items-center gap-2 px-6 py-6 border-b border-secondary/10">
+          <SidebarHeader className="flex items-center px-6 py-4 border-b border-secondary/10">
             <img
-              src="/logo.png"
-              alt="Company Logo"
-              className="h-10 w-auto"
+              src="/lovable-uploads/702e52c9-f2d6-4235-82e1-b0c841a7825b.png"
+              alt="Workspace Solutions"
+              className="h-12 w-auto"
             />
           </SidebarHeader>
           <DashboardSidebar />
@@ -20,7 +20,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="h-16 border-b border-secondary/10 bg-white px-6 flex items-center justify-between">
             <SidebarTrigger className="h-9 w-9 border border-secondary/10 rounded-lg text-secondary hover:text-primary hover:border-primary transition-colors" />
             <div className="flex items-center gap-4">
-              <div className="h-8 w-8 rounded-full bg-secondary text-white flex items-center justify-center font-medium">
+              <div className="h-8 w-8 rounded-full bg-primary text-secondary flex items-center justify-center font-medium">
                 A
               </div>
             </div>
