@@ -3,9 +3,15 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Edit2, Trash2, GripVertical, Plus, AlertCircle } from "lucide-react";
+import { Edit2, Trash2, GripVertical, Plus, AlertCircle, HelpCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type Industry = 
   | "Technology"
@@ -263,6 +269,24 @@ const Company = () => {
       queryClient.invalidateQueries({ queryKey: ["workspaceAttributes"] });
     },
   });
+
+  const InfoTooltip = ({ content }: { content: string }) => (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          className="p-0 h-auto hover:bg-transparent text-[#474a4f]/60 hover:text-[#474a4f]"
+        >
+          <HelpCircle className="h-4 w-4" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent 
+        className="max-w-[300px] text-sm bg-white text-[#474a4f] border border-[#474a4f]/10 p-3 shadow-lg"
+      >
+        {content}
+      </TooltipContent>
+    </Tooltip>
+  );
 
   if (isLoadingProfile || isLoadingAttributes || isLoadingGoals) {
     return (
@@ -539,89 +563,131 @@ const Company = () => {
 
       <Card className="border border-[#474a4f]/10 shadow-sm hover:shadow-md transition-shadow duration-200">
         <CardHeader className="border-b border-[#474a4f]/10">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-[1.5em] font-semibold text-[#474a4f]">
-              Workspace Attributes
-            </CardTitle>
-            {isAdmin && attributes.length < 10 && (
-              <div className="flex items-center gap-3">
-                <Input
-                  placeholder="Add a new workspace attribute"
-                  value={newAttribute}
-                  onChange={(e) => setNewAttribute(e.target.value)}
-                  className="w-[300px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
-                />
-                <Button
-                  onClick={() => {
-                    if (newAttribute.trim()) {
-                      addAttribute.mutate(newAttribute.trim());
-                    }
-                  }}
-                  className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Attribute
-                </Button>
-              </div>
-            )}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-[1.5em] font-semibold text-[#474a4f]">
+                Workspace Attributes (Company-Wide)
+              </CardTitle>
+              <InfoTooltip 
+                content="Workspace Attributes let you define which aspects—like Collaboration, Wellness, Brand Image—are most important to your organization as a whole. Each line of business can later choose or refine these attributes."
+              />
+            </div>
+            <p className="text-[#474a4f]/80 text-base">
+              These are the master set of workplace attributes that define what your organization values in any office space. You can pick up to 6 total: 3 "main" (primary) and 3 "secondary" (secondary). All Lines of Business will reference this set, though each LOB can further refine which ones they adopt and how they weight them.
+            </p>
           </div>
         </CardHeader>
         <CardContent className="pt-6">
-          <div className="space-y-3">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h3 className="font-medium text-[#474a4f]">Available Attributes</h3>
+                <InfoTooltip 
+                  content="From this list of 20 potential attributes, select 3 primary (top-priority) and 3 secondary. You may provide default weighting if desired. LOBs can then refine or skip attributes not relevant to them."
+                />
+              </div>
+              {isAdmin && attributes.length < 6 && (
+                <div className="flex items-center gap-3">
+                  <Input
+                    placeholder="Add a new workspace attribute"
+                    value={newAttribute}
+                    onChange={(e) => setNewAttribute(e.target.value)}
+                    className="w-[300px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
+                  />
+                  <Button
+                    onClick={() => {
+                      if (newAttribute.trim()) {
+                        addAttribute.mutate(newAttribute.trim());
+                      }
+                    }}
+                    className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold"
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Attribute
+                  </Button>
+                </div>
+              )}
+            </div>
+
             {attributes.length === 0 ? (
-              <p className="text-[#9e9e9e] text-center py-4">
-                No workspace attributes defined yet
-              </p>
+              <div className="text-center py-8 bg-[#f8f8f8] rounded-lg">
+                <p className="text-[#9e9e9e]">
+                  No workspace attributes defined yet
+                </p>
+                <p className="text-[#474a4f]/60 text-sm mt-1">
+                  Add up to 6 attributes that define what your organization values
+                </p>
+              </div>
             ) : (
-              attributes.map((attribute) => (
-                <div
-                  key={attribute.id}
-                  className="flex items-center justify-between p-4 bg-[#f8f8f8] rounded-lg group hover:bg-[#f3f3f3] transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    {isAdmin && (
-                      <GripVertical className="h-5 w-5 text-[#9e9e9e] cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
-                    )}
-                    <span className="text-[#474a4f] font-medium">
-                      {attribute.name}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4">
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <Input
-                        type="number"
-                        min="0"
-                        max="100"
-                        value={attribute.importance}
-                        onChange={(e) =>
-                          updateImportance.mutate({
-                            id: attribute.id,
-                            importance: parseInt(e.target.value),
-                          })
-                        }
-                        className="w-[80px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
-                        disabled={!isAdmin}
+                      <h4 className="font-medium text-[#474a4f]">Primary Attributes</h4>
+                      <InfoTooltip 
+                        content="These are your top 3 most important workspace attributes. They should reflect your organization's highest priorities."
                       />
-                      <span className="text-sm text-[#9e9e9e]">%</span>
                     </div>
-                    {isAdmin && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteAttribute.mutate(attribute.id)}
-                        className="opacity-0 group-hover:opacity-100 text-[#ef5823] hover:text-[#ef5823] hover:bg-[#ef5823]/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                    {attributes
+                      .filter((_, index) => index < 3)
+                      .map((attribute) => (
+                        <AttributeRow
+                          key={attribute.id}
+                          attribute={attribute}
+                          isAdmin={isAdmin}
+                          onDelete={() => deleteAttribute.mutate(attribute.id)}
+                          onImportanceChange={(importance) =>
+                            updateImportance.mutate({
+                              id: attribute.id,
+                              importance,
+                            })
+                          }
+                        />
+                      ))}
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-medium text-[#474a4f]">Secondary Attributes</h4>
+                      <InfoTooltip 
+                        content="These supporting attributes complement your primary ones and provide additional context for workspace evaluation."
+                      />
+                    </div>
+                    {attributes
+                      .filter((_, index) => index >= 3)
+                      .map((attribute) => (
+                        <AttributeRow
+                          key={attribute.id}
+                          attribute={attribute}
+                          isAdmin={isAdmin}
+                          onDelete={() => deleteAttribute.mutate(attribute.id)}
+                          onImportanceChange={(importance) =>
+                            updateImportance.mutate({
+                              id: attribute.id,
+                              importance,
+                            })
+                          }
+                        />
+                      ))}
                   </div>
                 </div>
-              ))
-            )}
-            {attributes.length >= 10 && (
-              <div className="flex items-center gap-2 text-sm text-[#ef5823] bg-[#ef5823]/5 p-3 rounded-lg mt-4">
-                <AlertCircle className="h-4 w-4" />
-                Maximum number of attributes (10) reached
+
+                {attributes.length >= 6 && (
+                  <div className="flex items-center gap-2 text-sm text-[#ef5823] bg-[#ef5823]/5 p-3 rounded-lg mt-4">
+                    <AlertCircle className="h-4 w-4" />
+                    Maximum number of attributes (6) reached
+                  </div>
+                )}
+
+                {isAdmin && (
+                  <div className="mt-4 p-3 bg-[#f8f8f8] rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="h-4 w-4 text-[#474a4f]/60" />
+                      <p className="text-sm text-[#474a4f]/80">
+                        Changing these attributes may affect existing Lines of Business and Scenarios
+                      </p>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -630,5 +696,50 @@ const Company = () => {
     </div>
   );
 };
+
+const AttributeRow = ({
+  attribute,
+  isAdmin,
+  onDelete,
+  onImportanceChange,
+}: {
+  attribute: WorkspaceAttribute;
+  isAdmin: boolean;
+  onDelete: () => void;
+  onImportanceChange: (importance: number) => void;
+}) => (
+  <div className="flex items-center justify-between p-4 bg-[#f8f8f8] rounded-lg group hover:bg-[#f3f3f3] transition-colors">
+    <div className="flex items-center gap-3">
+      {isAdmin && (
+        <GripVertical className="h-5 w-5 text-[#9e9e9e] cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
+      )}
+      <span className="text-[#474a4f] font-medium">{attribute.name}</span>
+    </div>
+    <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          min="0"
+          max="100"
+          value={attribute.importance}
+          onChange={(e) => onImportanceChange(parseInt(e.target.value))}
+          className="w-[80px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
+          disabled={!isAdmin}
+        />
+        <span className="text-sm text-[#9e9e9e]">%</span>
+      </div>
+      {isAdmin && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onDelete}
+          className="opacity-0 group-hover:opacity-100 text-[#ef5823] hover:text-[#ef5823] hover:bg-[#ef5823]/10"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      )}
+    </div>
+  </div>
+);
 
 export default Company;
