@@ -14,6 +14,16 @@ import {
 } from "@/components/company/types";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
+interface RawCompanyGoal {
+  id: number;
+  name: string;
+  company_id: number;
+  created_at: string;
+  updated_at: string;
+  importance?: number;
+  is_primary?: boolean;
+}
+
 const Company = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -58,10 +68,12 @@ const Company = () => {
       
       if (error) throw error;
       
-      return (data || []).map(goal => ({
-        ...goal,
-        importance: goal.importance || 0,
-        is_primary: goal.is_primary || false
+      return (data as RawCompanyGoal[] || []).map(goal => ({
+        id: goal.id,
+        name: goal.name,
+        company_id: goal.company_id,
+        importance: goal.importance ?? 0,
+        is_primary: goal.is_primary ?? false
       })) as CompanyGoal[];
     },
   });
