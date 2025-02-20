@@ -34,12 +34,26 @@ interface WorkspaceAttribute {
   order_index: number;
 }
 
+interface CompanyGoal {
+  id: number;
+  name: string;
+  company_id: number;
+}
+
+interface IndustryWeighting {
+  id: number;
+  attribute_name: string;
+  default_weight: number;
+}
+
 const Company = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<CompanyProfile | null>(null);
   const [newAttribute, setNewAttribute] = useState("");
+  const [newGoal, setNewGoal] = useState("");
+  const [isAdmin] = useState(true); // TODO: Replace with actual auth check
 
   // Fetch company profile
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
@@ -69,9 +83,41 @@ const Company = () => {
     },
   });
 
+  // Fetch company goals
+  const { data: goals = [], isLoading: isLoadingGoals } = useQuery({
+    queryKey: ["companyGoals"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("company_goals")
+        .select("*");
+      
+      if (error) throw error;
+      return data as CompanyGoal[];
+    },
+  });
+
+  // Fetch industry weightings
+  const { data: industryWeightings = [] } = useQuery({
+    queryKey: ["industryWeightings", editedProfile?.industry],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("industry_attribute_weightings")
+        .select("*")
+        .eq("industry", editedProfile?.industry);
+      
+      if (error) throw error;
+      return data as IndustryWeighting[];
+    },
+    enabled: !!editedProfile?.industry,
+  });
+
   // Update company profile mutation
   const updateProfile = useMutation({
     mutationFn: async (updatedProfile: Partial<CompanyProfile>) => {
+      if (!updatedProfile.industry) {
+        throw new Error("Please select an industry");
+      }
+
       const { data, error } = await supabase
         .from("company_profiles")
         .update(updatedProfile)
@@ -93,7 +139,7 @@ const Company = () => {
     onError: (error) => {
       toast({
         title: "Error",
-        description: "Failed to update company profile",
+        description: error instanceof Error ? error.message : "Failed to update company profile",
         variant: "destructive",
       });
       console.error("Error updating profile:", error);
@@ -103,12 +149,14 @@ const Company = () => {
   // Add workspace attribute mutation
   const addAttribute = useMutation({
     mutationFn: async (name: string) => {
+      const industryWeighting = industryWeightings.find(w => w.attribute_name === name);
+      
       const { data, error } = await supabase
         .from("workspace_attributes")
         .insert([
           {
             name,
-            importance: 0,
+            importance: industryWeighting?.default_weight || 0,
             company_id: profile?.id,
             order_index: attributes.length,
           },
@@ -140,6 +188,14 @@ const Company = () => {
   // Delete workspace attribute mutation
   const deleteAttribute = useMutation({
     mutationFn: async (id: number) => {
+      const confirmed = window.confirm(
+        "Warning: Removing this attribute might affect existing data in Lines of Business and Scenarios. Are you sure you want to proceed?"
+      );
+      
+      if (!confirmed) {
+        throw new Error("Operation cancelled by user");
+      }
+
       const { error } = await supabase
         .from("workspace_attributes")
         .delete()
@@ -155,12 +211,51 @@ const Company = () => {
       });
     },
     onError: (error) => {
+      if (error instanceof Error && error.message === "Operation cancelled by user") {
+        return;
+      }
+      
       toast({
         title: "Error",
         description: "Failed to delete workspace attribute",
         variant: "destructive",
       });
       console.error("Error deleting attribute:", error);
+    },
+  });
+
+  // Add company goal mutation
+  const addGoal = useMutation({
+    mutationFn: async (name: string) => {
+      const { data, error } = await supabase
+        .from("company_goals")
+        .insert([
+          {
+            name,
+            company_id: profile?.id,
+          },
+        ])
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["companyGoals"] });
+      setNewGoal("");
+      toast({
+        title: "Success",
+        description: "Company goal added successfully",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to add company goal",
+        variant: "destructive",
+      });
+      console.error("Error adding goal:", error);
     },
   });
 
@@ -179,21 +274,51 @@ const Company = () => {
     },
   });
 
-  if (isLoadingProfile || isLoadingAttributes) {
+  if (isLoadingProfile || isLoadingAttributes || isLoadingGoals) {
     return <div>Loading...</div>;
+  }
+
+  if (!profile) {
+    return (
+      <div className="text-center py-8">
+        <h2 className="text-2xl font-semibold mb-4">Initialize Company Profile</h2>
+        <Button
+          onClick={() => {
+            setIsEditing(true);
+            setEditedProfile({
+              id: 1,
+              name: "",
+              industry: "Technology",
+              company_size: 0,
+              number_of_sites: 0,
+            });
+          }}
+        >
+          Create Profile
+        </Button>
+      </div>
+    );
   }
 
   return (
     <div className="animate-fadeIn space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-4xl font-semibold text-workspace-primary">
-          Company Profile
-        </h1>
-        {!isEditing && (
-          <Button onClick={() => {
-            setIsEditing(true);
-            setEditedProfile(profile);
-          }}>
+      <div className="flex items-center justify-between bg-[#fccc55] p-4 rounded-lg">
+        <div>
+          <h1 className="text-4xl font-semibold text-[#474a4f]">
+            Company Profile
+          </h1>
+          <p className="text-[#474a4f]/80 mt-1">
+            Manage your global settings and workspace criteria
+          </p>
+        </div>
+        {isAdmin && !isEditing && (
+          <Button 
+            onClick={() => {
+              setIsEditing(true);
+              setEditedProfile(profile);
+            }}
+            style={{ backgroundColor: "#474a4f" }}
+          >
             <Edit2 className="h-4 w-4 mr-2" />
             Edit Profile
           </Button>
@@ -206,7 +331,7 @@ const Company = () => {
           <CardTitle>Company Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {isEditing ? (
+          {isAdmin && isEditing ? (
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -217,7 +342,7 @@ const Company = () => {
               className="space-y-4"
             >
               <div className="space-y-2">
-                <label className="text-sm font-medium">Company Name</label>
+                <label className="text-sm font-medium text-[#474a4f]">Company Name</label>
                 <Input
                   value={editedProfile?.name ?? ""}
                   onChange={(e) =>
@@ -225,20 +350,23 @@ const Company = () => {
                       prev ? { ...prev, name: e.target.value } : null
                     )
                   }
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Industry</label>
+                <label className="text-sm font-medium text-[#474a4f]">Industry</label>
                 <select
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm"
                   value={editedProfile?.industry ?? ""}
-                  onChange={(e) =>
+                  onChange={(e) => {
                     setEditedProfile((prev) =>
                       prev ? { ...prev, industry: e.target.value as Industry } : null
-                    )
-                  }
+                    );
+                  }}
+                  required
                 >
+                  <option value="">Select an industry</option>
                   {[
                     "Technology",
                     "Finance",
@@ -258,7 +386,7 @@ const Company = () => {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Company Size</label>
+                <label className="text-sm font-medium text-[#474a4f]">Company Size</label>
                 <Input
                   type="number"
                   value={editedProfile?.company_size ?? ""}
@@ -269,11 +397,12 @@ const Company = () => {
                         : null
                     )
                   }
+                  required
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium">Number of Sites</label>
+                <label className="text-sm font-medium text-[#474a4f]">Number of Sites</label>
                 <Input
                   type="number"
                   value={editedProfile?.number_of_sites ?? ""}
@@ -284,11 +413,17 @@ const Company = () => {
                         : null
                     )
                   }
+                  required
                 />
               </div>
 
               <div className="flex gap-2">
-                <Button type="submit">Save Changes</Button>
+                <Button 
+                  type="submit"
+                  style={{ backgroundColor: "#fccc55", color: "#474a4f" }}
+                >
+                  Save Changes
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => {
@@ -304,32 +439,88 @@ const Company = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-sm font-medium text-[#9e9e9e]">
                     Company Name
                   </p>
-                  <p className="text-lg">{profile?.name}</p>
+                  <p className="text-lg text-[#474a4f]">{profile?.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-sm font-medium text-[#9e9e9e]">
                     Industry
                   </p>
-                  <p className="text-lg">{profile?.industry}</p>
+                  <p className="text-lg text-[#474a4f]">{profile?.industry}</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-sm font-medium text-[#9e9e9e]">
                     Company Size
                   </p>
-                  <p className="text-lg">{profile?.company_size} employees</p>
+                  <p className="text-lg text-[#474a4f]">{profile?.company_size} employees</p>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-muted-foreground">
+                  <p className="text-sm font-medium text-[#9e9e9e]">
                     Number of Sites
                   </p>
-                  <p className="text-lg">{profile?.number_of_sites} locations</p>
+                  <p className="text-lg text-[#474a4f]">{profile?.number_of_sites} locations</p>
                 </div>
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Company Goals Card */}
+      <Card className="bg-white/50 backdrop-blur-sm">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Company Goals</CardTitle>
+            {isAdmin && goals.length < 10 && (
+              <div className="flex items-center gap-2">
+                <Input
+                  placeholder="New goal"
+                  value={newGoal}
+                  onChange={(e) => setNewGoal(e.target.value)}
+                  className="w-[200px]"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (newGoal.trim()) {
+                      addGoal.mutate(newGoal.trim());
+                    }
+                  }}
+                  style={{ backgroundColor: "#fccc55", color: "#474a4f" }}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {goals.map((goal) => (
+              <div
+                key={goal.id}
+                className="flex items-center justify-between p-3 bg-secondary/5 rounded-lg"
+              >
+                <span className="text-[#474a4f]">{goal.name}</span>
+                {isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      if (window.confirm("Are you sure you want to remove this goal?")) {
+                        // TODO: Implement delete goal
+                      }
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
@@ -338,7 +529,7 @@ const Company = () => {
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle>Workspace Attributes</CardTitle>
-            {attributes.length < 10 && (
+            {isAdmin && attributes.length < 10 && (
               <div className="flex items-center gap-2">
                 <Input
                   placeholder="New attribute name"
@@ -353,6 +544,7 @@ const Company = () => {
                       addAttribute.mutate(newAttribute.trim());
                     }
                   }}
+                  style={{ backgroundColor: "#fccc55", color: "#474a4f" }}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add
@@ -364,7 +556,7 @@ const Company = () => {
         <CardContent>
           <div className="space-y-4">
             {attributes.length === 0 ? (
-              <p className="text-muted-foreground text-center py-4">
+              <p className="text-[#9e9e9e] text-center py-4">
                 No workspace attributes defined yet
               </p>
             ) : (
@@ -375,8 +567,10 @@ const Company = () => {
                     className="flex items-center justify-between p-3 bg-secondary/5 rounded-lg group hover:bg-secondary/10 transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <GripVertical className="h-5 w-5 text-muted-foreground cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <span className="font-medium">{attribute.name}</span>
+                      {isAdmin && (
+                        <GripVertical className="h-5 w-5 text-muted-foreground cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
+                      <span className="font-medium text-[#474a4f]">{attribute.name}</span>
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="flex items-center gap-2">
@@ -392,24 +586,27 @@ const Company = () => {
                             })
                           }
                           className="w-[80px]"
+                          disabled={!isAdmin}
                         />
-                        <span className="text-sm text-muted-foreground">%</span>
+                        <span className="text-sm text-[#9e9e9e]">%</span>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity"
-                        onClick={() => deleteAttribute.mutate(attribute.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                      {isAdmin && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => deleteAttribute.mutate(attribute.id)}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
             )}
             {attributes.length >= 10 && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground mt-4">
+              <div className="flex items-center gap-2 text-sm text-[#9e9e9e] mt-4">
                 <AlertCircle className="h-4 w-4" />
                 Maximum number of attributes (10) reached
               </div>

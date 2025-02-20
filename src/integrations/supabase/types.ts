@@ -86,6 +86,38 @@ export type Database = {
           },
         ]
       }
+      company_goals: {
+        Row: {
+          company_id: number | null
+          created_at: string
+          id: number
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          company_id?: number | null
+          created_at?: string
+          id?: number
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: number | null
+          created_at?: string
+          id?: number
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_goals_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       company_profiles: {
         Row: {
           company_size: number
@@ -113,6 +145,30 @@ export type Database = {
           name?: string
           number_of_sites?: number | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      industry_attribute_weightings: {
+        Row: {
+          attribute_name: string
+          created_at: string
+          default_weight: number | null
+          id: number
+          industry: Database["public"]["Enums"]["industry_type"]
+        }
+        Insert: {
+          attribute_name: string
+          created_at?: string
+          default_weight?: number | null
+          id?: number
+          industry: Database["public"]["Enums"]["industry_type"]
+        }
+        Update: {
+          attribute_name?: string
+          created_at?: string
+          default_weight?: number | null
+          id?: number
+          industry?: Database["public"]["Enums"]["industry_type"]
         }
         Relationships: []
       }
@@ -201,6 +257,48 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "workspace_attributes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      workspace_attributes_history: {
+        Row: {
+          attribute_id: number | null
+          changed_at: string
+          company_id: number | null
+          id: number
+          importance: number | null
+          name: string
+        }
+        Insert: {
+          attribute_id?: number | null
+          changed_at?: string
+          company_id?: number | null
+          id?: number
+          importance?: number | null
+          name: string
+        }
+        Update: {
+          attribute_id?: number | null
+          changed_at?: string
+          company_id?: number | null
+          id?: number
+          importance?: number | null
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_attributes_history_attribute_id_fkey"
+            columns: ["attribute_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_attributes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_attributes_history_company_id_fkey"
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "company_profiles"
