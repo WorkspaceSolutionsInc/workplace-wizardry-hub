@@ -2,10 +2,21 @@
 export interface CompanyProfile {
   id: number;
   name: string;
-  industry: string;
+  industry: Industry;
   company_size: number;
   number_of_sites: number;
 }
+
+export type Industry = 
+  | "Technology"
+  | "Finance"
+  | "Healthcare"
+  | "Retail"
+  | "Manufacturing"
+  | "Professional Services"
+  | "Education"
+  | "Government"
+  | "Other";
 
 export interface WorkspaceAttribute {
   id: number;
@@ -51,4 +62,17 @@ export const PREDEFINED_ATTRIBUTES = [
   "Privacy / Soundproofing",
   "Executive / Client Impressiveness",
   "Furniture Ergonomics"
+] as const;
+
+export const PREDEFINED_GOALS = [
+  "Cost Optimization",
+  "Workforce Retention",
+  "Brand Enhancement",
+  "Innovation & Creativity",
+  "Environmental Sustainability",
+  "Employee Well-being",
+  "Operational Efficiency",
+  "Market Expansion",
+  "Talent Attraction",
+  "Digital Transformation"
 ] as const;

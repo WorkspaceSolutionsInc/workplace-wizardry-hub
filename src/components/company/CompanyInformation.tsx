@@ -2,7 +2,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { CompanyProfile } from "./types";
+import { CompanyProfile, Industry } from "./types";
 
 interface CompanyInformationProps {
   profile: CompanyProfile;
@@ -61,7 +61,7 @@ export const CompanyInformation = ({
               onChange={(e) =>
                 setEditedProfile(
                   editedProfile
-                    ? { ...editedProfile, industry: e.target.value as CompanyProfile["industry"] }
+                    ? { ...editedProfile, industry: e.target.value as Industry }
                     : null
                 )
               }
