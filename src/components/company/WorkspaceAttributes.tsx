@@ -63,9 +63,14 @@ export const WorkspaceAttributes = ({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <h3 className="font-medium text-[#474a4f]">Available Attributes</h3>
-              <InfoTooltip 
-                content="From this list of 20 potential attributes, select 3 primary (top-priority) and 3 secondary. You may provide default weighting if desired. LOBs can then refine or skip attributes not relevant to them."
-              />
+              <div className="flex items-center gap-2">
+                <InfoTooltip 
+                  content="From this list of 20 potential attributes, select 3 primary (top-priority) and 3 secondary. You may provide default weighting if desired. LOBs can then refine or skip attributes not relevant to them."
+                />
+                <InfoTooltip 
+                  content="Once you pick and rank your attributes here, Lines of Business and Scenarios will inherit them. Changing these attributes later can affect existing scenarios or lines of business."
+                />
+              </div>
             </div>
             {isAdmin && attributes.length < 6 && (
               <div className="flex items-center gap-3">
@@ -88,12 +93,7 @@ export const WorkspaceAttributes = ({
                           value={attr}
                           className="relative group"
                         >
-                          <div className="flex items-center justify-between w-full">
-                            <span>{attr}</span>
-                            <InfoTooltip
-                              content={getAttributeDescription(attr)}
-                            />
-                          </div>
+                          {attr}
                         </SelectItem>
                       ))}
                   </SelectContent>
@@ -205,32 +205,4 @@ export const WorkspaceAttributes = ({
       </CardContent>
     </Card>
   );
-};
-
-// Helper function to get attribute descriptions
-const getAttributeDescription = (attr: string): string => {
-  const descriptions: Record<string, string> = {
-    "Collaboration": "Spaces that encourage team interaction, huddle rooms, open layout",
-    "Cost Efficiency": "Optimal use of space and resources to minimize operational costs",
-    "Employee Wellness": "Features promoting physical and mental health, including air quality and comfort",
-    "Location Convenience": "Accessibility for employees, clients, and business needs",
-    "Brand Image / Aesthetics": "Visual appeal and alignment with company brand identity",
-    "Quiet Spaces / Focus Areas": "Dedicated areas for concentrated work and privacy",
-    "Technology Infrastructure": "IT systems, connectivity, and digital workspace capabilities",
-    "Flexibility / Agile Spaces": "Adaptable spaces that can be reconfigured for different needs",
-    "Sustainability / Green Initiatives": "Environmental impact and energy efficiency measures",
-    "Security / Access Control": "Physical security measures and access management",
-    "Amenities (Cafeteria, Gym)": "On-site facilities for employee convenience and satisfaction",
-    "Parking / Transportation": "Access to parking and public transit options",
-    "Team Adjacencies": "Strategic placement of teams for optimal collaboration",
-    "Openness / Layout Flow": "Space planning that promotes movement and interaction",
-    "Daylight / Natural Lighting": "Access to natural light and views",
-    "Safety (Fire, Earthquake readiness)": "Emergency preparedness and safety features",
-    "Workspace Density": "Appropriate space allocation per person, avoiding overcrowding",
-    "Privacy / Soundproofing": "Acoustic isolation and visual privacy measures",
-    "Executive / Client Impressiveness": "Areas designed to impress visitors and clients",
-    "Furniture Ergonomics": "Comfortable, adjustable furniture supporting employee health"
-  };
-  
-  return descriptions[attr] || attr;
 };
