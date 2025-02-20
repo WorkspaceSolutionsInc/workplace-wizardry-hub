@@ -1,12 +1,15 @@
 
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useScenarios } from "@/hooks/scenarios/useScenarios";
 import { ScenarioCard } from "@/components/scenarios/ScenarioCard";
+import { CreateScenarioWizard } from "@/components/scenarios/CreateScenarioWizard";
 
 const Scenarios = () => {
   const { data: scenarios = [], isLoading } = useScenarios();
+  const [showCreateWizard, setShowCreateWizard] = useState(false);
 
   return (
     <div className="animate-fadeIn space-y-8">
@@ -16,10 +19,7 @@ const Scenarios = () => {
         </h1>
         <Button 
           className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] gap-2"
-          onClick={() => {
-            // TODO: Implement create scenario
-            console.log("Create scenario clicked");
-          }}
+          onClick={() => setShowCreateWizard(true)}
         >
           <Plus className="h-4 w-4" />
           New Scenario
@@ -54,6 +54,10 @@ const Scenarios = () => {
             />
           ))}
         </div>
+      )}
+
+      {showCreateWizard && (
+        <CreateScenarioWizard onClose={() => setShowCreateWizard(false)} />
       )}
     </div>
   );
