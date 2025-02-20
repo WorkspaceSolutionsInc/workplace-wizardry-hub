@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { WorkspaceAttribute, IndustryWeighting } from "@/components/company/types";
+import { WorkspaceAttribute, IndustryWeighting, Industry } from "@/components/company/types";
 import { useToast } from "@/components/ui/use-toast";
 
 interface RawWorkspaceAttribute {
@@ -15,7 +15,7 @@ interface RawWorkspaceAttribute {
   is_primary?: boolean;
 }
 
-export function useWorkspaceAttributes(industry?: string) {
+export function useWorkspaceAttributes(industry?: Industry) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -39,6 +39,8 @@ export function useWorkspaceAttributes(industry?: string) {
   const { data: industryWeightings = [] } = useQuery({
     queryKey: ["industryWeightings", industry],
     queryFn: async () => {
+      if (!industry) throw new Error("Industry is required");
+      
       const { data, error } = await supabase
         .from("industry_attribute_weightings")
         .select("*")
