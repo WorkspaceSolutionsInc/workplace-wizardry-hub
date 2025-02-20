@@ -86,6 +86,36 @@ export type Database = {
           },
         ]
       }
+      company_profiles: {
+        Row: {
+          company_size: number
+          created_at: string
+          id: number
+          industry: Database["public"]["Enums"]["industry_type"]
+          name: string
+          number_of_sites: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_size: number
+          created_at?: string
+          id?: number
+          industry: Database["public"]["Enums"]["industry_type"]
+          name: string
+          number_of_sites?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_size?: number
+          created_at?: string
+          id?: number
+          industry?: Database["public"]["Enums"]["industry_type"]
+          name?: string
+          number_of_sites?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       module_statuses: {
         Row: {
           created_at: string
@@ -140,6 +170,44 @@ export type Database = {
         }
         Relationships: []
       }
+      workspace_attributes: {
+        Row: {
+          company_id: number | null
+          created_at: string
+          id: number
+          importance: number | null
+          name: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          company_id?: number | null
+          created_at?: string
+          id?: number
+          importance?: number | null
+          name: string
+          order_index: number
+          updated_at?: string
+        }
+        Update: {
+          company_id?: number | null
+          created_at?: string
+          id?: number
+          importance?: number | null
+          name?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_attributes_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -148,7 +216,16 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      industry_type:
+        | "Technology"
+        | "Finance"
+        | "Healthcare"
+        | "Retail"
+        | "Manufacturing"
+        | "Professional Services"
+        | "Education"
+        | "Government"
+        | "Other"
     }
     CompositeTypes: {
       [_ in never]: never
