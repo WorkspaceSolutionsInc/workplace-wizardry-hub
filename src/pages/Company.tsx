@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,9 +52,8 @@ const Company = () => {
   const [editedProfile, setEditedProfile] = useState<CompanyProfile | null>(null);
   const [newAttribute, setNewAttribute] = useState("");
   const [newGoal, setNewGoal] = useState("");
-  const [isAdmin] = useState(true); // TODO: Replace with actual auth check
+  const [isAdmin] = useState(true);
 
-  // Fetch company profile
   const { data: profile, isLoading: isLoadingProfile } = useQuery({
     queryKey: ["companyProfile"],
     queryFn: async () => {
@@ -69,7 +67,6 @@ const Company = () => {
     },
   });
 
-  // Fetch workspace attributes
   const { data: attributes = [], isLoading: isLoadingAttributes } = useQuery({
     queryKey: ["workspaceAttributes"],
     queryFn: async () => {
@@ -83,7 +80,6 @@ const Company = () => {
     },
   });
 
-  // Fetch company goals
   const { data: goals = [], isLoading: isLoadingGoals } = useQuery({
     queryKey: ["companyGoals"],
     queryFn: async () => {
@@ -96,7 +92,6 @@ const Company = () => {
     },
   });
 
-  // Fetch industry weightings
   const { data: industryWeightings = [] } = useQuery({
     queryKey: ["industryWeightings", editedProfile?.industry],
     queryFn: async () => {
@@ -111,7 +106,6 @@ const Company = () => {
     enabled: !!editedProfile?.industry,
   });
 
-  // Update company profile mutation
   const updateProfile = useMutation({
     mutationFn: async (updatedProfile: Partial<CompanyProfile>) => {
       if (!updatedProfile.industry) {
@@ -146,7 +140,6 @@ const Company = () => {
     },
   });
 
-  // Add workspace attribute mutation
   const addAttribute = useMutation({
     mutationFn: async (name: string) => {
       const industryWeighting = industryWeightings.find(w => w.attribute_name === name);
@@ -185,7 +178,6 @@ const Company = () => {
     },
   });
 
-  // Delete workspace attribute mutation
   const deleteAttribute = useMutation({
     mutationFn: async (id: number) => {
       const confirmed = window.confirm(
@@ -224,7 +216,6 @@ const Company = () => {
     },
   });
 
-  // Add company goal mutation
   const addGoal = useMutation({
     mutationFn: async (name: string) => {
       const { data, error } = await supabase
@@ -259,7 +250,6 @@ const Company = () => {
     },
   });
 
-  // Update attribute importance mutation
   const updateImportance = useMutation({
     mutationFn: async ({ id, importance }: { id: number; importance: number }) => {
       const { error } = await supabase
@@ -275,13 +265,22 @@ const Company = () => {
   });
 
   if (isLoadingProfile || isLoadingAttributes || isLoadingGoals) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <p className="text-[#474a4f] text-lg">Loading...</p>
+      </div>
+    );
   }
 
   if (!profile) {
     return (
-      <div className="text-center py-8">
-        <h2 className="text-2xl font-semibold mb-4">Initialize Company Profile</h2>
+      <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+        <h2 className="text-[2em] font-bold text-[#474a4f]">
+          Initialize Company Profile
+        </h2>
+        <p className="text-[#474a4f]/80 text-lg mb-4">
+          Set up your company information to get started
+        </p>
         <Button
           onClick={() => {
             setIsEditing(true);
@@ -293,6 +292,7 @@ const Company = () => {
               number_of_sites: 0,
             });
           }}
+          className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold text-base px-6"
         >
           Create Profile
         </Button>
@@ -302,35 +302,38 @@ const Company = () => {
 
   return (
     <div className="animate-fadeIn space-y-8">
-      <div className="flex items-center justify-between bg-[#fccc55] p-4 rounded-lg">
-        <div>
-          <h1 className="text-4xl font-semibold text-[#474a4f]">
-            Company Profile
-          </h1>
-          <p className="text-[#474a4f]/80 mt-1">
-            Manage your global settings and workspace criteria
-          </p>
+      <div className="bg-[#fccc55] p-6 rounded-lg shadow-sm">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-[2em] font-bold text-[#474a4f] tracking-tight">
+              Company Profile
+            </h1>
+            <p className="text-[#474a4f]/80 mt-1 text-base">
+              Manage your global settings and workspace criteria
+            </p>
+          </div>
+          {isAdmin && !isEditing && (
+            <Button
+              onClick={() => {
+                setIsEditing(true);
+                setEditedProfile(profile);
+              }}
+              className="bg-[#474a4f] text-white hover:bg-[#3e4449] font-semibold flex items-center gap-2"
+            >
+              <Edit2 className="h-4 w-4" />
+              Edit Profile
+            </Button>
+          )}
         </div>
-        {isAdmin && !isEditing && (
-          <Button 
-            onClick={() => {
-              setIsEditing(true);
-              setEditedProfile(profile);
-            }}
-            style={{ backgroundColor: "#474a4f" }}
-          >
-            <Edit2 className="h-4 w-4 mr-2" />
-            Edit Profile
-          </Button>
-        )}
       </div>
 
-      {/* Company Information Card */}
-      <Card className="bg-white/50 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle>Company Information</CardTitle>
+      <Card className="border border-[#474a4f]/10 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <CardHeader className="border-b border-[#474a4f]/10">
+          <CardTitle className="text-[1.5em] font-semibold text-[#474a4f]">
+            Company Information
+          </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="pt-6 space-y-6">
           {isAdmin && isEditing ? (
             <form
               onSubmit={(e) => {
@@ -417,10 +420,10 @@ const Company = () => {
                 />
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <Button 
                   type="submit"
-                  style={{ backgroundColor: "#fccc55", color: "#474a4f" }}
+                  className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold"
                 >
                   Save Changes
                 </Button>
@@ -430,183 +433,193 @@ const Company = () => {
                     setIsEditing(false);
                     setEditedProfile(null);
                   }}
+                  className="border-[#474a4f]/20 text-[#474a4f] hover:bg-[#474a4f]/5"
                 >
                   Cancel
                 </Button>
               </div>
             </form>
           ) : (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-[#9e9e9e]">
-                    Company Name
-                  </p>
-                  <p className="text-lg text-[#474a4f]">{profile?.name}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-[#9e9e9e]">
-                    Industry
-                  </p>
-                  <p className="text-lg text-[#474a4f]">{profile?.industry}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-[#9e9e9e]">
-                    Company Size
-                  </p>
-                  <p className="text-lg text-[#474a4f]">{profile?.company_size} employees</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-[#9e9e9e]">
-                    Number of Sites
-                  </p>
-                  <p className="text-lg text-[#474a4f]">{profile?.number_of_sites} locations</p>
-                </div>
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <p className="text-sm font-medium text-[#9e9e9e] mb-1">
+                  Company Name
+                </p>
+                <p className="text-lg text-[#474a4f]">{profile?.name}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-[#9e9e9e] mb-1">
+                  Industry
+                </p>
+                <p className="text-lg text-[#474a4f]">{profile?.industry}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-[#9e9e9e] mb-1">
+                  Company Size
+                </p>
+                <p className="text-lg text-[#474a4f]">
+                  {profile?.company_size.toLocaleString()} employees
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-[#9e9e9e] mb-1">
+                  Number of Sites
+                </p>
+                <p className="text-lg text-[#474a4f]">
+                  {profile?.number_of_sites.toLocaleString()} locations
+                </p>
               </div>
             </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Company Goals Card */}
-      <Card className="bg-white/50 backdrop-blur-sm">
-        <CardHeader>
+      <Card className="border border-[#474a4f]/10 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <CardHeader className="border-b border-[#474a4f]/10">
           <div className="flex items-center justify-between">
-            <CardTitle>Company Goals</CardTitle>
+            <CardTitle className="text-[1.5em] font-semibold text-[#474a4f]">
+              Company Goals
+            </CardTitle>
             {isAdmin && goals.length < 10 && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Input
-                  placeholder="New goal"
+                  placeholder="Add a new company goal"
                   value={newGoal}
                   onChange={(e) => setNewGoal(e.target.value)}
-                  className="w-[200px]"
+                  className="w-[300px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
                 />
                 <Button
-                  size="sm"
                   onClick={() => {
                     if (newGoal.trim()) {
                       addGoal.mutate(newGoal.trim());
                     }
                   }}
-                  style={{ backgroundColor: "#fccc55", color: "#474a4f" }}
+                  className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add
+                  Add Goal
                 </Button>
               </div>
             )}
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            {goals.map((goal) => (
-              <div
-                key={goal.id}
-                className="flex items-center justify-between p-3 bg-secondary/5 rounded-lg"
-              >
-                <span className="text-[#474a4f]">{goal.name}</span>
-                {isAdmin && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      if (window.confirm("Are you sure you want to remove this goal?")) {
-                        // TODO: Implement delete goal
-                      }
-                    }}
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                )}
-              </div>
-            ))}
+        <CardContent className="pt-6">
+          <div className="space-y-3">
+            {goals.length === 0 ? (
+              <p className="text-[#9e9e9e] text-center py-4">
+                No company goals defined yet
+              </p>
+            ) : (
+              goals.map((goal) => (
+                <div
+                  key={goal.id}
+                  className="flex items-center justify-between p-4 bg-[#f8f8f8] rounded-lg group hover:bg-[#f3f3f3] transition-colors"
+                >
+                  <span className="text-[#474a4f] font-medium">{goal.name}</span>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        if (window.confirm("Are you sure you want to remove this goal?")) {
+                          // TODO: Implement delete goal
+                        }
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-[#ef5823] hover:text-[#ef5823] hover:bg-[#ef5823]/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Workspace Attributes Card */}
-      <Card className="bg-white/50 backdrop-blur-sm">
-        <CardHeader>
+      <Card className="border border-[#474a4f]/10 shadow-sm hover:shadow-md transition-shadow duration-200">
+        <CardHeader className="border-b border-[#474a4f]/10">
           <div className="flex items-center justify-between">
-            <CardTitle>Workspace Attributes</CardTitle>
+            <CardTitle className="text-[1.5em] font-semibold text-[#474a4f]">
+              Workspace Attributes
+            </CardTitle>
             {isAdmin && attributes.length < 10 && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Input
-                  placeholder="New attribute name"
+                  placeholder="Add a new workspace attribute"
                   value={newAttribute}
                   onChange={(e) => setNewAttribute(e.target.value)}
-                  className="w-[200px]"
+                  className="w-[300px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
                 />
                 <Button
-                  size="sm"
                   onClick={() => {
                     if (newAttribute.trim()) {
                       addAttribute.mutate(newAttribute.trim());
                     }
                   }}
-                  style={{ backgroundColor: "#fccc55", color: "#474a4f" }}
+                  className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add
+                  Add Attribute
                 </Button>
               </div>
             )}
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <CardContent className="pt-6">
+          <div className="space-y-3">
             {attributes.length === 0 ? (
               <p className="text-[#9e9e9e] text-center py-4">
                 No workspace attributes defined yet
               </p>
             ) : (
-              <div className="space-y-2">
-                {attributes.map((attribute) => (
-                  <div
-                    key={attribute.id}
-                    className="flex items-center justify-between p-3 bg-secondary/5 rounded-lg group hover:bg-secondary/10 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      {isAdmin && (
-                        <GripVertical className="h-5 w-5 text-muted-foreground cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
-                      )}
-                      <span className="font-medium text-[#474a4f]">{attribute.name}</span>
-                    </div>
-                    <div className="flex items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          value={attribute.importance}
-                          onChange={(e) =>
-                            updateImportance.mutate({
-                              id: attribute.id,
-                              importance: parseInt(e.target.value),
-                            })
-                          }
-                          className="w-[80px]"
-                          disabled={!isAdmin}
-                        />
-                        <span className="text-sm text-[#9e9e9e]">%</span>
-                      </div>
-                      {isAdmin && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => deleteAttribute.mutate(attribute.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      )}
-                    </div>
+              attributes.map((attribute) => (
+                <div
+                  key={attribute.id}
+                  className="flex items-center justify-between p-4 bg-[#f8f8f8] rounded-lg group hover:bg-[#f3f3f3] transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    {isAdmin && (
+                      <GripVertical className="h-5 w-5 text-[#9e9e9e] cursor-move opacity-0 group-hover:opacity-100 transition-opacity" />
+                    )}
+                    <span className="text-[#474a4f] font-medium">
+                      {attribute.name}
+                    </span>
                   </div>
-                ))}
-              </div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={attribute.importance}
+                        onChange={(e) =>
+                          updateImportance.mutate({
+                            id: attribute.id,
+                            importance: parseInt(e.target.value),
+                          })
+                        }
+                        className="w-[80px] border-[#474a4f]/20 focus-visible:ring-[#fccc55]"
+                        disabled={!isAdmin}
+                      />
+                      <span className="text-sm text-[#9e9e9e]">%</span>
+                    </div>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => deleteAttribute.mutate(attribute.id)}
+                        className="opacity-0 group-hover:opacity-100 text-[#ef5823] hover:text-[#ef5823] hover:bg-[#ef5823]/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))
             )}
             {attributes.length >= 10 && (
-              <div className="flex items-center gap-2 text-sm text-[#9e9e9e] mt-4">
+              <div className="flex items-center gap-2 text-sm text-[#ef5823] bg-[#ef5823]/5 p-3 rounded-lg mt-4">
                 <AlertCircle className="h-4 w-4" />
                 Maximum number of attributes (10) reached
               </div>
