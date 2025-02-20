@@ -70,9 +70,24 @@ const stats = [
 ];
 
 const quickStats = [
-  { label: "Active Scenarios", value: "2" },
-  { label: "Total Spaces", value: "4" },
-  { label: "Business Units", value: "3" },
+  { 
+    label: "Active Scenarios", 
+    value: "2",
+    trend: "up",
+    change: "+1 this month"
+  },
+  { 
+    label: "Total Spaces", 
+    value: "4",
+    trend: "stable",
+    change: "No change"
+  },
+  { 
+    label: "Business Units", 
+    value: "3",
+    trend: "up",
+    change: "+1 this week"
+  },
 ];
 
 const Dashboard = () => {
@@ -91,17 +106,33 @@ const Dashboard = () => {
           </p>
         </div>
         
-        {/* Quick Stats */}
+        {/* Quick Stats Cards - Refined Design */}
         <div className="flex gap-4 flex-wrap">
           {quickStats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-secondary px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
+              className="relative overflow-hidden group bg-gradient-to-br from-background to-background-neutral 
+                rounded-lg border border-secondary/10 p-4 min-w-[160px]
+                hover:shadow-[0_8px_16px_-6px_rgba(0,0,0,0.1)] 
+                transition-all duration-300 ease-in-out
+                hover:border-primary/20 hover:translate-y-[-2px]"
             >
-              <p className="text-2xl font-bold text-background mb-1">
-                {stat.value}
-              </p>
-              <p className="text-sm font-medium text-background/90">{stat.label}</p>
+              <div className="relative z-10">
+                <div className="flex items-baseline gap-1 mb-1">
+                  <span className="text-3xl font-bold text-secondary tracking-tight">
+                    {stat.value}
+                  </span>
+                </div>
+                <p className="text-sm font-medium text-secondary/60 mb-2">
+                  {stat.label}
+                </p>
+                <div className="text-xs font-medium text-secondary/40">
+                  {stat.change}
+                </div>
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 
+                opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
+              />
             </div>
           ))}
         </div>
