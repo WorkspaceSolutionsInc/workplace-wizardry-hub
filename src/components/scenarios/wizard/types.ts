@@ -1,4 +1,6 @@
 
+import { ScenarioObjective } from "../types";
+
 export interface CreateScenarioFormData {
   name: string;
   objective: ScenarioObjective;
