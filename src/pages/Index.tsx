@@ -64,7 +64,7 @@ const Dashboard = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-semibold text-workspace-primary">
+          <h1 className="text-4xl font-semibold text-secondary">
             Welcome, Andrew
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -77,12 +77,12 @@ const Dashboard = () => {
           {quickStats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-white/50 backdrop-blur-sm px-4 py-2 rounded-lg"
+              className="bg-white/50 backdrop-blur-sm px-4 py-2 rounded-lg border border-primary/20"
             >
-              <p className="text-2xl font-semibold text-workspace-primary">
+              <p className="text-2xl font-semibold text-primary">
                 {stat.value}
               </p>
-              <p className="text-xs text-muted-foreground">{stat.label}</p>
+              <p className="text-xs text-secondary">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -96,39 +96,39 @@ const Dashboard = () => {
             className={`
               cursor-pointer transition-all duration-200 
               hover:shadow-lg hover:scale-[1.02] 
-              ${stat.incomplete ? 'border-orange-200' : 'border-transparent'}
+              ${stat.incomplete ? 'border-orange-200' : 'border-primary/20'}
               bg-white/50 backdrop-blur-sm
             `}
           >
             <CardHeader className="flex flex-row items-start justify-between pb-2 space-y-0">
               <div className="space-y-1">
-                <CardTitle className="text-lg font-medium flex items-center gap-2">
-                  <stat.icon className="h-5 w-5 text-workspace-primary" />
+                <CardTitle className="text-lg font-medium flex items-center gap-2 text-secondary">
+                  <stat.icon className="h-5 w-5 text-primary" />
                   {stat.title}
                   {stat.incomplete && (
                     <AlertCircle className="h-4 w-4 text-orange-500" />
                   )}
                 </CardTitle>
-                <p className="text-sm font-medium text-workspace-primary">
+                <p className="text-sm font-medium text-primary">
                   {stat.status}
                 </p>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-secondary">
                 {stat.description}
               </p>
               <div className="flex gap-3">
                 <Button
                   variant="outline"
-                  className="w-full"
+                  className="w-full border-primary/20 text-secondary hover:bg-primary/5"
                   onClick={() => navigate(stat.path)}
                 >
                   View All
                 </Button>
                 <Button
                   variant="default"
-                  className="w-full bg-workspace-primary hover:bg-workspace-primary/90"
+                  className="w-full bg-primary hover:bg-primary/90 text-secondary"
                   onClick={() => navigate(stat.path)}
                 >
                   {stat.action}
@@ -142,18 +142,20 @@ const Dashboard = () => {
       {/* Recent Activity Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-semibold text-workspace-primary">
+          <h2 className="text-2xl font-semibold text-secondary">
             Recent Activity
           </h2>
-          <Button variant="outline">View All</Button>
+          <Button variant="outline" className="border-primary/20 text-secondary hover:bg-primary/5">
+            View All
+          </Button>
         </div>
-        <Card className="bg-white/50 backdrop-blur-sm">
+        <Card className="bg-white/50 backdrop-blur-sm border-primary/20">
           <CardContent className="p-6">
             <div className="space-y-4">
               <div className="flex items-center gap-4">
-                <Users className="h-8 w-8 p-1.5 rounded-full bg-workspace-accent text-workspace-primary" />
+                <Users className="h-8 w-8 p-1.5 rounded-full bg-primary/10 text-primary" />
                 <div>
-                  <p className="font-medium">New Business Unit Added</p>
+                  <p className="font-medium text-secondary">New Business Unit Added</p>
                   <p className="text-sm text-muted-foreground">
                     Marketing department was added to Lines of Business
                   </p>
@@ -161,9 +163,9 @@ const Dashboard = () => {
                 <p className="ml-auto text-sm text-muted-foreground">2h ago</p>
               </div>
               <div className="flex items-center gap-4">
-                <ListTodo className="h-8 w-8 p-1.5 rounded-full bg-workspace-accent text-workspace-primary" />
+                <ListTodo className="h-8 w-8 p-1.5 rounded-full bg-primary/10 text-primary" />
                 <div>
-                  <p className="font-medium">Space Updated</p>
+                  <p className="font-medium text-secondary">Space Updated</p>
                   <p className="text-sm text-muted-foreground">
                     HQ Floor 5 space details were modified
                   </p>
