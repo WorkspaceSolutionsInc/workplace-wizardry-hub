@@ -11,8 +11,6 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 const stats = [
   {
@@ -94,19 +92,6 @@ const quickStats = [
 
 const Dashboard = () => {
   const navigate = useNavigate();
-
-  // Fetch module statuses from backend
-  const { data: moduleStatuses } = useQuery({
-    queryKey: ['moduleStatuses'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('module_statuses')
-        .select('*');
-      
-      if (error) throw error;
-      return data;
-    }
-  });
 
   return (
     <div className="animate-fadeIn space-y-8">

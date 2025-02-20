@@ -86,6 +86,36 @@ export type Database = {
           },
         ]
       }
+      module_statuses: {
+        Row: {
+          created_at: string
+          id: number
+          module_type: string
+          status: string
+          updated_at: string
+          warning_count: number | null
+          warning_message: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          module_type: string
+          status: string
+          updated_at?: string
+          warning_count?: number | null
+          warning_message?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          module_type?: string
+          status?: string
+          updated_at?: string
+          warning_count?: number | null
+          warning_message?: string | null
+        }
+        Relationships: []
+      }
       secrets: {
         Row: {
           created_at: string
