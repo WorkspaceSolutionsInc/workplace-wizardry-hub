@@ -8,12 +8,10 @@ import {
   Users,
 } from "lucide-react";
 import {
-  Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -33,29 +31,28 @@ export function DashboardSidebar() {
   const navigate = useNavigate();
 
   return (
-    <Sidebar>
-      <SidebarHeader>
-        <h2 className="text-xl font-semibold text-workspace-primary px-6 py-4">
-          Workplace Hub
-        </h2>
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {menuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton onClick={() => navigate(item.path)}>
-                    <item.icon className="w-5 h-5" />
-                    <span>{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-    </Sidebar>
+    <SidebarContent className="pt-4">
+      <SidebarGroup>
+        <SidebarGroupLabel className="px-6 text-xs font-medium text-secondary/60">
+          Navigation
+        </SidebarGroupLabel>
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {menuItems.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton 
+                  onClick={() => navigate(item.path)}
+                  className="px-6 py-2.5 w-full flex items-center gap-3 text-secondary/80 hover:text-primary hover:bg-primary/5 rounded-none transition-colors relative group"
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span className="font-medium">{item.title}</span>
+                  <div className="absolute left-0 top-0 h-full w-1 bg-primary scale-y-0 group-hover:scale-y-100 transition-transform" />
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+    </SidebarContent>
   );
 }
