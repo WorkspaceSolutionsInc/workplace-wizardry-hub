@@ -57,7 +57,12 @@ const Company = () => {
         .select("*");
       
       if (error) throw error;
-      return data as CompanyGoal[];
+      
+      return (data || []).map(goal => ({
+        ...goal,
+        importance: goal.importance || 0,
+        is_primary: goal.is_primary || false
+      })) as CompanyGoal[];
     },
   });
 
@@ -193,6 +198,8 @@ const Company = () => {
           {
             name,
             company_id: profile?.id,
+            importance: 0,
+            is_primary: goals.length < 3
           },
         ])
         .select()
