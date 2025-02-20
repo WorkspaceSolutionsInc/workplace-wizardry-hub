@@ -29,6 +29,8 @@ export interface CompanyGoal {
   id: number;
   name: string;
   company_id: number;
+  importance: number;
+  is_primary: boolean;
 }
 
 export interface IndustryWeighting {
@@ -60,4 +62,18 @@ export const PREDEFINED_ATTRIBUTES = [
   "Furniture Ergonomics"
 ] as const;
 
+export const PREDEFINED_GOALS = [
+  "Cost Optimization",
+  "Workforce Retention",
+  "Brand Enhancement",
+  "Innovation & Creativity",
+  "Environmental Sustainability",
+  "Employee Well-being",
+  "Operational Efficiency",
+  "Market Expansion",
+  "Talent Attraction",
+  "Digital Transformation"
+] as const;
+
 export type PredefinedAttribute = typeof PREDEFINED_ATTRIBUTES[number];
+export type PredefinedGoal = typeof PREDEFINED_GOALS[number];
