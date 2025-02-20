@@ -211,6 +211,191 @@ export type Database = {
         }
         Relationships: []
       }
+      scenario_attribute_ratings: {
+        Row: {
+          attribute_id: number | null
+          created_at: string
+          id: number
+          lob_id: number
+          rating: number
+          scenario_id: number | null
+          updated_at: string
+        }
+        Insert: {
+          attribute_id?: number | null
+          created_at?: string
+          id?: number
+          lob_id: number
+          rating: number
+          scenario_id?: number | null
+          updated_at?: string
+        }
+        Update: {
+          attribute_id?: number | null
+          created_at?: string
+          id?: number
+          lob_id?: number
+          rating?: number
+          scenario_id?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenario_attribute_ratings_attribute_id_fkey"
+            columns: ["attribute_id"]
+            isOneToOne: false
+            referencedRelation: "workspace_attributes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scenario_attribute_ratings_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scenario_financials: {
+        Row: {
+          created_at: string
+          id: number
+          lease_term_months: number | null
+          monthly_cost: number | null
+          scenario_id: number | null
+          space_id: number
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          lease_term_months?: number | null
+          monthly_cost?: number | null
+          scenario_id?: number | null
+          space_id: number
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          lease_term_months?: number | null
+          monthly_cost?: number | null
+          scenario_id?: number | null
+          space_id?: number
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenario_financials_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scenario_lobs: {
+        Row: {
+          created_at: string
+          id: number
+          lob_id: number
+          scenario_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          lob_id: number
+          scenario_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          lob_id?: number
+          scenario_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenario_lobs_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scenario_spaces: {
+        Row: {
+          created_at: string
+          id: number
+          scenario_id: number | null
+          space_id: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          scenario_id?: number | null
+          space_id: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          scenario_id?: number | null
+          space_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenario_spaces_scenario_id_fkey"
+            columns: ["scenario_id"]
+            isOneToOne: false
+            referencedRelation: "scenarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scenarios: {
+        Row: {
+          company_id: number | null
+          created_at: string
+          description: string | null
+          id: number
+          name: string
+          objective: Database["public"]["Enums"]["scenario_objective"]
+          status: Database["public"]["Enums"]["scenario_status"]
+          updated_at: string
+        }
+        Insert: {
+          company_id?: number | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          name: string
+          objective: Database["public"]["Enums"]["scenario_objective"]
+          status?: Database["public"]["Enums"]["scenario_status"]
+          updated_at?: string
+        }
+        Update: {
+          company_id?: number | null
+          created_at?: string
+          description?: string | null
+          id?: number
+          name?: string
+          objective?: Database["public"]["Enums"]["scenario_objective"]
+          status?: Database["public"]["Enums"]["scenario_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scenarios_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "company_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       secrets: {
         Row: {
           created_at: string
@@ -339,6 +524,18 @@ export type Database = {
         | "Education"
         | "Government"
         | "Other"
+      scenario_objective:
+        | "cost_optimization"
+        | "workforce_retention"
+        | "brand_enhancement"
+        | "innovation_and_creativity"
+        | "environmental_sustainability"
+        | "employee_wellbeing"
+        | "operational_efficiency"
+        | "market_expansion"
+        | "talent_attraction"
+        | "digital_transformation"
+      scenario_status: "draft" | "in_progress" | "completed"
     }
     CompositeTypes: {
       [_ in never]: never
