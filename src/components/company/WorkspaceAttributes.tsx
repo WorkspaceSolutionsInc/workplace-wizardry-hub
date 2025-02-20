@@ -1,6 +1,5 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Plus, AlertCircle } from "lucide-react";
 import { InfoTooltip } from "./InfoTooltip";
@@ -34,6 +33,13 @@ export const WorkspaceAttributes = ({
   onImportanceChange,
 }: WorkspaceAttributesProps) => {
   const usedAttributes = new Set(attributes.map(attr => attr.name));
+  const primaryAttributes = attributes.filter((_, index) => index < 3);
+  const secondaryAttributes = attributes.filter((_, index) => index >= 3);
+  const isPrimaryFull = primaryAttributes.length >= 3;
+  const isSecondaryFull = secondaryAttributes.length >= 3;
+
+  const totalWeight = attributes.reduce((sum, attr) => sum + attr.importance, 0);
+  const hasWeightingError = totalWeight !== 100 && attributes.length === 6;
 
   return (
     <Card className="border border-[#474a4f]/10 shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -71,22 +77,34 @@ export const WorkspaceAttributes = ({
                     <SelectValue placeholder="Select an attribute" />
                   </SelectTrigger>
                   <SelectContent>
+                    <div className="p-2 text-sm text-[#474a4f]/60">
+                      {!isPrimaryFull ? 'Select a primary attribute' : 'Select a secondary attribute'}
+                    </div>
                     {PREDEFINED_ATTRIBUTES
                       .filter(attr => !usedAttributes.has(attr))
                       .map((attr) => (
-                        <SelectItem key={attr} value={attr}>
-                          {attr}
+                        <SelectItem 
+                          key={attr} 
+                          value={attr}
+                          className="relative group"
+                        >
+                          <div className="flex items-center justify-between w-full">
+                            <span>{attr}</span>
+                            <InfoTooltip
+                              content={getAttributeDescription(attr)}
+                            />
+                          </div>
                         </SelectItem>
                       ))}
                   </SelectContent>
                 </Select>
                 <Button
                   onClick={onAddAttribute}
-                  disabled={!newAttribute}
+                  disabled={!newAttribute || (isPrimaryFull && isSecondaryFull)}
                   className="bg-[#fccc55] text-[#474a4f] hover:bg-[#fbbb45] font-semibold disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4 mr-2" />
-                  Add Attribute
+                  Add {!isPrimaryFull ? 'Primary' : 'Secondary'} Attribute
                 </Button>
               </div>
             )}
@@ -110,20 +128,26 @@ export const WorkspaceAttributes = ({
                     <InfoTooltip 
                       content="These are your top 3 most important workspace attributes. They should reflect your organization's highest priorities."
                     />
+                    {isPrimaryFull && (
+                      <span className="text-sm text-[#22c55e]">(Complete)</span>
+                    )}
                   </div>
-                  {attributes
-                    .filter((_, index) => index < 3)
-                    .map((attribute) => (
-                      <AttributeRow
-                        key={attribute.id}
-                        attribute={attribute}
-                        isAdmin={isAdmin}
-                        onDelete={() => onDeleteAttribute(attribute.id)}
-                        onImportanceChange={(importance) =>
-                          onImportanceChange(attribute.id, importance)
-                        }
-                      />
-                    ))}
+                  {primaryAttributes.map((attribute) => (
+                    <AttributeRow
+                      key={attribute.id}
+                      attribute={attribute}
+                      isAdmin={isAdmin}
+                      onDelete={() => onDeleteAttribute(attribute.id)}
+                      onImportanceChange={(importance) =>
+                        onImportanceChange(attribute.id, importance)
+                      }
+                    />
+                  ))}
+                  {!isPrimaryFull && (
+                    <div className="text-sm text-[#474a4f]/60 italic">
+                      {3 - primaryAttributes.length} primary attribute{3 - primaryAttributes.length !== 1 ? 's' : ''} remaining
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
@@ -131,27 +155,37 @@ export const WorkspaceAttributes = ({
                     <InfoTooltip 
                       content="These supporting attributes complement your primary ones and provide additional context for workspace evaluation."
                     />
+                    {isSecondaryFull && (
+                      <span className="text-sm text-[#22c55e]">(Complete)</span>
+                    )}
                   </div>
-                  {attributes
-                    .filter((_, index) => index >= 3)
-                    .map((attribute) => (
-                      <AttributeRow
-                        key={attribute.id}
-                        attribute={attribute}
-                        isAdmin={isAdmin}
-                        onDelete={() => onDeleteAttribute(attribute.id)}
-                        onImportanceChange={(importance) =>
-                          onImportanceChange(attribute.id, importance)
-                        }
-                      />
-                    ))}
+                  {secondaryAttributes.map((attribute) => (
+                    <AttributeRow
+                      key={attribute.id}
+                      attribute={attribute}
+                      isAdmin={isAdmin}
+                      onDelete={() => onDeleteAttribute(attribute.id)}
+                      onImportanceChange={(importance) =>
+                        onImportanceChange(attribute.id, importance)
+                      }
+                    />
+                  ))}
+                  {!isSecondaryFull && (
+                    <div className="text-sm text-[#474a4f]/60 italic">
+                      {3 - secondaryAttributes.length} secondary attribute{3 - secondaryAttributes.length !== 1 ? 's' : ''} remaining
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {attributes.length >= 6 && (
-                <div className="flex items-center gap-2 text-sm text-[#ef5823] bg-[#ef5823]/5 p-3 rounded-lg mt-4">
+              {attributes.length === 6 && (
+                <div className={`flex items-center gap-2 text-sm p-3 rounded-lg mt-4 ${
+                  hasWeightingError ? 'bg-[#ef5823]/5 text-[#ef5823]' : 'bg-[#22c55e]/5 text-[#22c55e]'
+                }`}>
                   <AlertCircle className="h-4 w-4" />
-                  Maximum number of attributes (6) reached
+                  {hasWeightingError 
+                    ? `Total weighting must equal 100% (currently ${totalWeight}%)`
+                    : 'All attributes selected and properly weighted'}
                 </div>
               )}
 
@@ -171,4 +205,32 @@ export const WorkspaceAttributes = ({
       </CardContent>
     </Card>
   );
+};
+
+// Helper function to get attribute descriptions
+const getAttributeDescription = (attr: string): string => {
+  const descriptions: Record<string, string> = {
+    "Collaboration": "Spaces that encourage team interaction, huddle rooms, open layout",
+    "Cost Efficiency": "Optimal use of space and resources to minimize operational costs",
+    "Employee Wellness": "Features promoting physical and mental health, including air quality and comfort",
+    "Location Convenience": "Accessibility for employees, clients, and business needs",
+    "Brand Image / Aesthetics": "Visual appeal and alignment with company brand identity",
+    "Quiet Spaces / Focus Areas": "Dedicated areas for concentrated work and privacy",
+    "Technology Infrastructure": "IT systems, connectivity, and digital workspace capabilities",
+    "Flexibility / Agile Spaces": "Adaptable spaces that can be reconfigured for different needs",
+    "Sustainability / Green Initiatives": "Environmental impact and energy efficiency measures",
+    "Security / Access Control": "Physical security measures and access management",
+    "Amenities (Cafeteria, Gym)": "On-site facilities for employee convenience and satisfaction",
+    "Parking / Transportation": "Access to parking and public transit options",
+    "Team Adjacencies": "Strategic placement of teams for optimal collaboration",
+    "Openness / Layout Flow": "Space planning that promotes movement and interaction",
+    "Daylight / Natural Lighting": "Access to natural light and views",
+    "Safety (Fire, Earthquake readiness)": "Emergency preparedness and safety features",
+    "Workspace Density": "Appropriate space allocation per person, avoiding overcrowding",
+    "Privacy / Soundproofing": "Acoustic isolation and visual privacy measures",
+    "Executive / Client Impressiveness": "Areas designed to impress visitors and clients",
+    "Furniture Ergonomics": "Comfortable, adjustable furniture supporting employee health"
+  };
+  
+  return descriptions[attr] || attr;
 };
