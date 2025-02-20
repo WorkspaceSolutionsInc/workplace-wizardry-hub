@@ -47,10 +47,6 @@ const Scenarios = () => {
             <ScenarioCard
               key={scenario.id}
               scenario={scenario}
-              onClick={() => {
-                // TODO: Implement view details
-                console.log("View scenario details:", scenario.id);
-              }}
             />
           ))}
         </div>
