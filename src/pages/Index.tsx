@@ -80,34 +80,34 @@ const Dashboard = () => {
 
   return (
     <div className="animate-fadeIn space-y-8">
-      {/* Header Section - Following typography guidelines */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
-        <div>
-          <h1 className="text-[2em] font-bold text-secondary mb-2">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="space-y-2">
+          <h1 className="text-[2em] font-bold text-secondary tracking-tight">
             Welcome, Andrew
           </h1>
-          <p className="text-secondary/80 text-base leading-relaxed">
-            Here's what's happening in your workspace
+          <p className="text-base text-secondary/80 leading-relaxed max-w-[600px]">
+            Here's what's happening in your workspace. Review your spaces and scenarios to optimize your workplace strategy.
           </p>
         </div>
         
-        {/* Quick Stats - Using proper color contrast */}
+        {/* Quick Stats */}
         <div className="flex gap-4 flex-wrap">
           {quickStats.map((stat) => (
             <div
               key={stat.label}
-              className="bg-secondary px-4 py-2 rounded-md shadow-sm"
+              className="bg-secondary px-6 py-3 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200"
             >
-              <p className="text-2xl font-semibold text-background">
+              <p className="text-2xl font-bold text-background mb-1">
                 {stat.value}
               </p>
-              <p className="text-sm text-background/90">{stat.label}</p>
+              <p className="text-sm font-medium text-background/90">{stat.label}</p>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Module Cards Grid - Implementing card design guidelines */}
+      {/* Module Cards Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
         {stats.map((stat) => (
           <Card
@@ -116,21 +116,21 @@ const Dashboard = () => {
               group transition-all duration-200 
               hover:shadow-[0_2px_6px_rgba(0,0,0,0.08)] hover:translate-y-[-2px]
               bg-background border-secondary/10
-              ${stat.incomplete ? 'border-error' : ''}
+              ${stat.incomplete ? 'border-error border-opacity-50' : ''}
             `}
           >
             <CardHeader className="flex flex-row items-start justify-between pb-2 space-y-0 border-b border-secondary/10">
-              <div className="space-y-1">
-                <CardTitle className="text-lg font-medium flex items-center gap-2 text-secondary group-hover:text-primary">
-                  <div className="p-2 rounded-lg bg-background-neutral group-hover:bg-primary/10">
-                    <stat.icon className="h-5 w-5 text-secondary group-hover:text-primary" />
+              <div className="space-y-1.5">
+                <CardTitle className="text-lg font-semibold flex items-center gap-2.5 text-secondary group-hover:text-primary transition-colors duration-200">
+                  <div className="p-2.5 rounded-lg bg-background-neutral group-hover:bg-primary/10 transition-colors duration-200">
+                    <stat.icon className="h-5 w-5 text-secondary group-hover:text-primary transition-colors duration-200" />
                   </div>
                   {stat.title}
                   {stat.incomplete && (
-                    <AlertCircle className="h-4 w-4 text-error" />
+                    <AlertCircle className="h-4 w-4 text-error animate-pulse" />
                   )}
                 </CardTitle>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm font-medium text-muted-foreground">
                   {stat.status}
                 </p>
               </div>
@@ -149,7 +149,15 @@ const Dashboard = () => {
                 </Button>
                 <Button
                   variant="default"
-                  className="w-full bg-primary text-secondary font-semibold hover:bg-primary-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  className={`
+                    w-full font-semibold
+                    ${stat.incomplete 
+                      ? 'bg-error hover:bg-error/90 text-white' 
+                      : 'bg-primary text-secondary hover:bg-primary-hover'
+                    }
+                    focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+                    transition-colors duration-200
+                  `}
                   onClick={() => navigate(stat.path)}
                 >
                   {stat.action}
@@ -163,7 +171,7 @@ const Dashboard = () => {
       {/* Recent Activity Section */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-[1.5em] font-semibold text-secondary">
+          <h2 className="text-[1.5em] font-semibold text-secondary tracking-tight">
             Recent Activity
           </h2>
           <Button 
@@ -176,29 +184,33 @@ const Dashboard = () => {
         <Card className="border-secondary/10">
           <CardContent className="p-6">
             <div className="space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="p-2 rounded-lg bg-background-neutral">
-                  <Users className="h-6 w-6 text-secondary" />
+              <div className="flex items-center gap-4 group">
+                <div className="p-2.5 rounded-lg bg-background-neutral group-hover:bg-primary/10 transition-colors duration-200">
+                  <Users className="h-6 w-6 text-secondary group-hover:text-primary transition-colors duration-200" />
                 </div>
                 <div>
-                  <p className="font-medium text-secondary">New Business Unit Added</p>
+                  <p className="font-medium text-secondary group-hover:text-primary transition-colors duration-200">
+                    New Business Unit Added
+                  </p>
                   <p className="text-secondary/60 leading-relaxed">
                     Marketing department was added to Lines of Business
                   </p>
                 </div>
-                <p className="ml-auto text-sm text-muted-foreground">2h ago</p>
+                <p className="ml-auto text-sm font-medium text-muted-foreground">2h ago</p>
               </div>
-              <div className="flex items-center gap-4">
-                <div className="p-2 rounded-lg bg-background-neutral">
-                  <ListTodo className="h-6 w-6 text-secondary" />
+              <div className="flex items-center gap-4 group">
+                <div className="p-2.5 rounded-lg bg-background-neutral group-hover:bg-primary/10 transition-colors duration-200">
+                  <ListTodo className="h-6 w-6 text-secondary group-hover:text-primary transition-colors duration-200" />
                 </div>
                 <div>
-                  <p className="font-medium text-secondary">Space Updated</p>
+                  <p className="font-medium text-secondary group-hover:text-primary transition-colors duration-200">
+                    Space Updated
+                  </p>
                   <p className="text-secondary/60 leading-relaxed">
                     HQ Floor 5 space details were modified
                   </p>
                 </div>
-                <p className="ml-auto text-sm text-muted-foreground">5h ago</p>
+                <p className="ml-auto text-sm font-medium text-muted-foreground">5h ago</p>
               </div>
             </div>
           </CardContent>
