@@ -1,358 +1,40 @@
+
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Edit2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 import { CompanyInformation } from "@/components/company/CompanyInformation";
 import { WorkspaceAttributes } from "@/components/company/WorkspaceAttributes";
 import { CompanyGoals } from "@/components/company/CompanyGoals";
-import {
-  CompanyProfile,
-  WorkspaceAttribute,
-  CompanyGoal,
-  IndustryWeighting,
-  PREDEFINED_GOALS
-} from "@/components/company/types";
+import { useCompanyProfile } from "@/hooks/company/useCompanyProfile";
+import { useWorkspaceAttributes } from "@/hooks/company/useWorkspaceAttributes";
+import { useCompanyGoals } from "@/hooks/company/useCompanyGoals";
 import { TooltipProvider } from "@/components/ui/tooltip";
-
-interface RawCompanyGoal {
-  id: number;
-  name: string;
-  company_id: number;
-  created_at: string;
-  updated_at: string;
-  importance?: number;
-  is_primary?: boolean;
-}
-
-interface RawWorkspaceAttribute {
-  id: number;
-  name: string;
-  company_id: number;
-  created_at: string;
-  updated_at: string;
-  importance: number;
-  order_index: number;
-  is_primary?: boolean;
-}
+import { CompanyProfile } from "@/components/company/types";
 
 const Company = () => {
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editedProfile, setEditedProfile] = useState<CompanyProfile | null>(null);
   const [isAdmin] = useState(true);
   const [newGoal, setNewGoal] = useState('');
 
-  const { data: profile, isLoading: isLoadingProfile } = useQuery({
-    queryKey: ["companyProfile"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("company_profiles")
-        .select("*")
-        .single();
-      
-      if (error) throw error;
-      return data as CompanyProfile;
-    },
-  });
+  const { profile, isLoading: isLoadingProfile, updateProfile } = useCompanyProfile();
+  const { 
+    attributes, 
+    isLoading: isLoadingAttributes,
+    addAttribute,
+    deleteAttribute,
+    updateAttributeImportance,
+    toggleAttributePrimary
+  } = useWorkspaceAttributes(editedProfile?.industry);
 
-  const { data: attributes = [], isLoading: isLoadingAttributes } = useQuery({
-    queryKey: ["workspaceAttributes"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("workspace_attributes")
-        .select("*")
-        .order("order_index");
-      
-      if (error) throw error;
-      
-      return (data as RawWorkspaceAttribute[]).map(attr => ({
-        ...attr,
-        is_primary: attr.is_primary ?? false
-      })) as WorkspaceAttribute[];
-    },
-  });
-
-  const { data: goals = [], isLoading: isLoadingGoals } = useQuery({
-    queryKey: ["companyGoals"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("company_goals")
-        .select("*");
-      
-      if (error) throw error;
-      
-      return (data as RawCompanyGoal[] || []).map(goal => ({
-        id: goal.id,
-        name: goal.name,
-        company_id: goal.company_id,
-        importance: goal.importance ?? 0,
-        is_primary: goal.is_primary ?? false
-      })) as CompanyGoal[];
-    },
-  });
-
-  const { data: industryWeightings = [] } = useQuery({
-    queryKey: ["industryWeightings", editedProfile?.industry],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("industry_attribute_weightings")
-        .select("*")
-        .eq("industry", editedProfile?.industry);
-      
-      if (error) throw error;
-      return data as IndustryWeighting[];
-    },
-    enabled: !!editedProfile?.industry,
-  });
-
-  const updateProfile = useMutation({
-    mutationFn: async (updatedProfile: Partial<CompanyProfile>) => {
-      if (!updatedProfile.industry) {
-        throw new Error("Please select an industry");
-      }
-
-      const { data, error } = await supabase
-        .from("company_profiles")
-        .update(updatedProfile)
-        .eq("id", profile?.id)
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyProfile"] });
-      toast({
-        title: "Success",
-        description: "Company profile updated successfully",
-      });
-      setIsEditing(false);
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update company profile",
-        variant: "destructive",
-      });
-      console.error("Error updating profile:", error);
-    },
-  });
-
-  const addGoal = useMutation({
-    mutationFn: async (isPrimary: boolean) => {
-      const { data, error } = await supabase
-        .from("company_goals")
-        .insert([
-          {
-            name: newGoal,
-            company_id: profile?.id,
-            importance: 0,
-            is_primary: isPrimary
-          },
-        ])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyGoals"] });
-      setNewGoal('');
-      toast({
-        title: "Success",
-        description: "Company goal added successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to add company goal",
-        variant: "destructive",
-      });
-      console.error("Error adding goal:", error);
-    },
-  });
-
-  const deleteGoal = useMutation({
-    mutationFn: async (id: number) => {
-      const { error } = await supabase
-        .from("company_goals")
-        .delete()
-        .eq("id", id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyGoals"] });
-      toast({
-        title: "Success",
-        description: "Company goal deleted successfully",
-      });
-    },
-  });
-
-  const updateGoalImportance = useMutation({
-    mutationFn: async ({ id, importance }: { id: number; importance: number }) => {
-      const { error } = await supabase
-        .from("company_goals")
-        .update({ importance })
-        .eq("id", id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyGoals"] });
-    },
-  });
-
-  const toggleGoalPrimary = useMutation({
-    mutationFn: async (id: number) => {
-      const goal = goals.find(g => g.id === id);
-      if (!goal) return;
-
-      const newIsPrimary = !goal.is_primary;
-      const primaryCount = goals.filter(g => g.is_primary).length;
-
-      if (newIsPrimary && primaryCount >= 3) {
-        throw new Error("Maximum of 3 primary goals allowed");
-      }
-
-      const { error } = await supabase
-        .from("company_goals")
-        .update({ is_primary: newIsPrimary })
-        .eq("id", id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["companyGoals"] });
-    },
-  });
-
-  const addAttribute = useMutation({
-    mutationFn: async (name: string) => {
-      const industryWeighting = industryWeightings.find(w => w.attribute_name === name);
-      
-      const { data, error } = await supabase
-        .from("workspace_attributes")
-        .insert([
-          {
-            name,
-            importance: industryWeighting?.default_weight || 0,
-            company_id: profile?.id,
-            order_index: attributes.length
-          },
-        ])
-        .select()
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspaceAttributes"] });
-      toast({
-        title: "Success",
-        description: "Workspace attribute added successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to add workspace attribute. Maximum limit may have been reached.",
-        variant: "destructive",
-      });
-      console.error("Error adding attribute:", error);
-    },
-  });
-
-  const deleteAttribute = useMutation({
-    mutationFn: async (id: number) => {
-      const confirmed = window.confirm(
-        "Warning: Removing this attribute might affect existing data in Lines of Business and Scenarios. Are you sure you want to proceed?"
-      );
-      
-      if (!confirmed) {
-        throw new Error("Operation cancelled by user");
-      }
-
-      const { error } = await supabase
-        .from("workspace_attributes")
-        .delete()
-        .eq("id", id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspaceAttributes"] });
-      toast({
-        title: "Success",
-        description: "Workspace attribute deleted successfully",
-      });
-    },
-    onError: (error) => {
-      if (error instanceof Error && error.message === "Operation cancelled by user") {
-        return;
-      }
-      
-      toast({
-        title: "Error",
-        description: "Failed to delete workspace attribute",
-        variant: "destructive",
-      });
-      console.error("Error deleting attribute:", error);
-    },
-  });
-
-  const updateAttributeImportance = useMutation({
-    mutationFn: async ({ id, importance }: { id: number; importance: number }) => {
-      const { error } = await supabase
-        .from("workspace_attributes")
-        .update({ importance })
-        .eq("id", id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspaceAttributes"] });
-    },
-  });
-
-  const toggleAttributePrimary = useMutation({
-    mutationFn: async (id: number) => {
-      const attribute = attributes.find(a => a.id === id);
-      if (!attribute) return;
-
-      const newIsPrimary = !attribute.is_primary;
-      const primaryCount = attributes.filter(a => a.is_primary).length;
-
-      if (newIsPrimary && primaryCount >= 3) {
-        throw new Error("Maximum of 3 primary attributes allowed");
-      }
-
-      const { error } = await supabase
-        .from("workspace_attributes")
-        .update({ is_primary: newIsPrimary })
-        .eq("id", id);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["workspaceAttributes"] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update attribute priority",
-        variant: "destructive",
-      });
-    },
-  });
+  const {
+    goals,
+    isLoading: isLoadingGoals,
+    addGoal,
+    deleteGoal,
+    updateGoalImportance,
+    toggleGoalPrimary
+  } = useCompanyGoals();
 
   if (isLoadingProfile || isLoadingAttributes || isLoadingGoals) {
     return (
@@ -424,7 +106,11 @@ const Company = () => {
           isEditing={isEditing}
           editedProfile={editedProfile}
           setEditedProfile={setEditedProfile}
-          onSave={(updatedProfile) => updateProfile.mutate(updatedProfile)}
+          onSave={(updatedProfile) => {
+            updateProfile.mutate(updatedProfile);
+            setIsEditing(false);
+            setEditedProfile(null);
+          }}
           onCancel={() => {
             setIsEditing(false);
             setEditedProfile(null);
@@ -436,7 +122,15 @@ const Company = () => {
           isAdmin={isAdmin}
           newGoal={newGoal}
           onNewGoalChange={setNewGoal}
-          onAddGoal={(isPrimary) => addGoal.mutate(isPrimary)}
+          onAddGoal={(isPrimary) => 
+            addGoal.mutate({ 
+              name: newGoal, 
+              isPrimary, 
+              companyId: profile.id 
+            }, {
+              onSuccess: () => setNewGoal('')
+            })
+          }
           onDeleteGoal={(id) => deleteGoal.mutate(id)}
           onImportanceChange={(id, importance) =>
             updateGoalImportance.mutate({ id, importance })
@@ -447,15 +141,7 @@ const Company = () => {
         <WorkspaceAttributes
           attributes={attributes}
           isAdmin={isAdmin}
-          onAddAttribute={(name, isPrimary) => 
-            addAttribute.mutate(name, {
-              onSuccess: () => {
-                if (isPrimary) {
-                  toggleAttributePrimary.mutate(attributes[attributes.length - 1].id);
-                }
-              }
-            })
-          }
+          onAddAttribute={(name) => addAttribute.mutate(name)}
           onDeleteAttribute={(id) => deleteAttribute.mutate(id)}
           onImportanceChange={(id, importance) =>
             updateAttributeImportance.mutate({ id, importance })
