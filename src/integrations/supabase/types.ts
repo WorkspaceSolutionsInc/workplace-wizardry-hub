@@ -90,6 +90,7 @@ export type Database = {
         Row: {
           company_id: number | null
           created_at: string
+          description: string | null
           id: number
           importance: number | null
           is_primary: boolean | null
@@ -99,6 +100,7 @@ export type Database = {
         Insert: {
           company_id?: number | null
           created_at?: string
+          description?: string | null
           id?: number
           importance?: number | null
           is_primary?: boolean | null
@@ -108,6 +110,7 @@ export type Database = {
         Update: {
           company_id?: number | null
           created_at?: string
+          description?: string | null
           id?: number
           importance?: number | null
           is_primary?: boolean | null
@@ -236,8 +239,10 @@ export type Database = {
         Row: {
           company_id: number | null
           created_at: string
+          description: string | null
           id: number
           importance: number | null
+          is_primary: boolean | null
           name: string
           order_index: number
           updated_at: string
@@ -245,8 +250,10 @@ export type Database = {
         Insert: {
           company_id?: number | null
           created_at?: string
+          description?: string | null
           id?: number
           importance?: number | null
+          is_primary?: boolean | null
           name: string
           order_index: number
           updated_at?: string
@@ -254,8 +261,10 @@ export type Database = {
         Update: {
           company_id?: number | null
           created_at?: string
+          description?: string | null
           id?: number
           importance?: number | null
+          is_primary?: boolean | null
           name?: string
           order_index?: number
           updated_at?: string
