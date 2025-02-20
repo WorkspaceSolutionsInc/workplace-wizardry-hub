@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   BarChart3,
@@ -10,6 +11,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const stats = [
   {
@@ -92,6 +95,19 @@ const quickStats = [
 const Dashboard = () => {
   const navigate = useNavigate();
 
+  // Fetch module statuses from backend
+  const { data: moduleStatuses } = useQuery({
+    queryKey: ['moduleStatuses'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('module_statuses')
+        .select('*');
+      
+      if (error) throw error;
+      return data;
+    }
+  });
+
   return (
     <div className="animate-fadeIn space-y-8">
       {/* Header Section */}
@@ -150,7 +166,13 @@ const Dashboard = () => {
                   </div>
                   {stat.title}
                   {stat.incomplete && (
-                    <AlertCircle className="h-4 w-4 text-error animate-pulse" />
+                    <div className="relative">
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-error rounded-full animate-ping" />
+                      <AlertCircle 
+                        className="h-5 w-5 text-error"
+                        aria-label={`Warning: ${stat.status}`}
+                      />
+                    </div>
                   )}
                 </CardTitle>
                 <p className="text-sm font-medium text-muted-foreground">
